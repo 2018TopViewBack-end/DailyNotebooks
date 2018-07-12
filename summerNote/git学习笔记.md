@@ -40,7 +40,7 @@
 
 * git commit -m "xxx"
 
-* git push (如果不行先用git pull --rebase origin master)
+* git push (如果不行先用==git pull --rebase origin master==，拉取远程的文件把本地的覆盖，再上传)
 
   
 
