@@ -17,9 +17,9 @@
 * **`<execution>`**将插件绑定在某个阶段
 * 继承的绝对路径是pom的文件
 * 聚合是模块(module)的位置
-* site![1531298117965](E:\Program Files\notebook\1531298117965.png)
+* site![1531298117965](https://github.com/630231047/notebook/blob/master/1531298117965.png?raw=true)
 * 插件的安装方法
-* ![1531298309002](E:\Program Files\notebook\1531298309002.png)
+* ![1531298309002](https://github.com/630231047/notebook/blob/master/1531298309002.png?raw=true)
 
 ---
 
@@ -47,15 +47,15 @@
 
 * 本地仓库
 
-* ![1531298018202](E:\Program Files\notebook\1531298018202.png)
+* ![1531298018202](https://github.com/630231047/notebook/blob/master/1531298018202.png?raw=true)
 * 镜像仓库
-* ![1531297947281](E:\Program Files\notebook\1531297947281.png)
+* ![1531297947281](https://github.com/630231047/notebook/blob/master/1531297947281.png?raw=true)
 
 ---
 
 ### 4. 目录骨架
 
-![1531271523736](E:\Program Files\notebook\1531271523736.png)
+![1531271523736](https://github.com/630231047/notebook/blob/master/1531271523736.png?raw=true)
 
 -----------------
 
@@ -95,15 +95,15 @@
 
 ### 9.pom属性(以下参考慕课网视频https://www.imooc.com/video/8645/0)
 
-* ![1531298639475](E:\Program Files\notebook\1531298639475.png)
+* ![1531298639475](https://github.com/630231047/notebook/blob/master/1531298639475.png?raw=true)
 
-![1531298681189](E:\Program Files\notebook\1531298681189.png)
+![1531298681189](https://github.com/630231047/notebook/blob/master/1531298681189.png?raw=true)
 
-![1531298861706](E:\Program Files\notebook\1531298861706.png)
+![1531298861706](https://github.com/630231047/notebook/blob/master/1531298861706.png?raw=true)
 
 ![1531298950992](E:\Program Files\notebook\1531298950992.png)
 
-![1531299003791](E:\Program Files\notebook\1531299003791.png)
+![1531299003791](https://github.com/630231047/notebook/blob/master/1531299003791.png?raw=true)
 
 ```java
 <!--将插件绑定在某个阶段-->
@@ -141,13 +141,13 @@
 ### 10.插件的使用方法
 
 * **`configuration`**可以用来配置参数
-* ![1531308712068](E:\Program Files\notebook\1531308712068.png)
+* ![1531308712068](https://github.com/630231047/notebook/blob/master/1531308712068.png?raw=true)
 
 
 
 ### 11.依赖冲突的解决方案
 
-当出现了冲突的时候，比如系统出现了**`NoSuchMethodError`**，**`ClassNotFoundException`**, [LinkageError](http://www.daniel-journey.com/archives/1122) 很有可能是你系统中出现了依赖冲突。出现冲突以后，可以按以下的步骤执行：
+当出现了冲突的时候，比如系统出现了**`NoSuchMethodError`**，[LinkageError](http://www.daniel-journey.com/archives/1122) 很有可能是你系统中出现了依赖冲突。出现冲突以后，可以按以下的步骤执行：
 
 * 1.确定出了问题的jar包名称。通常可以在eclipse中查找冲突的类有在哪些依赖包里面出现了。并确定实际要使用的是哪个包，冲突的包有哪些。
 * 2.通过mvn dependency:tree  >  tree.txt 导出全部的依赖。
