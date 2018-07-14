@@ -254,10 +254,13 @@ select origin_name1 alias1, origin_name2 alias2... FROM orders WHERE ...
 
 origin_name为数据库表中字段名，alias为javabean中属性名
 
-**或整段写为：**
+**或写为resultMap：**	
 
-![1531449405678](C:\Users\Medwin。\AppData\Local\Temp\1531449405678.png)
-
+		<resultMap type="Order" id="getOrder2Map">
+		<id property="id" column="order_id"/>
+		<result property="orderNo" column="order_no"/>
+		<result property="price" column="order_price"/>
+	</resultMap>
 其中，id属性专门针对主键
 
 - 但是！妙馨老大发现不改也行？？？
