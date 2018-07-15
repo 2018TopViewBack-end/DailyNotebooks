@@ -77,28 +77,39 @@ jdbc.password=My159357@sql
   <!DOCTYPE configuration
           PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
           "http://mybatis.org/dtd/mybatis-3-config.dtd">
+          
   <configuration>
+  
       <properties resource="mysql.properties"/>
+      
       <settings>
+      
           <!--全局性设置懒加载。如果设为‘false’，则所有相关联的都会被初始化加载,默认值为false-->
           <setting name="lazyLoadingEnabled" value="true"/>
-          <!--当设置为‘true’的时候，懒加载的对象可能被任何懒属性全部加载。否则，每个属性都按需加载。默认值为true-->
+          
+          <!--当设置为‘true’的时候，懒加载的对象可能被任何懒属性全部加载。否则，每个属性都按需加载。			默认值为true-->
           <setting name="aggressiveLazyLoading" value="false"/>
+          
       </settings>
+      
       <typeAliases>
           <!-- 其实就是将bean的替换成一个短的名字-->
           <typeAlias type="com.hgc.pojo.User" alias="User"/>
       </typeAliases>
+      
       <!--对事务的管理和连接池的配置-->
       <environments default="development">
           <environment id="development">
               <transactionManager type="JDBC"></transactionManager>
-              <dataSource type="POOLED"><!--POOLED：使用Mybatis自带的数据库连接池来管理数据库连接-->
+              
+              <!--POOLED：使用Mybatis自带的数据库连接池来管理数据库连接-->
+              <dataSource type="POOLED">
                   <property name="driver" value="${jdbc.driver}"/>
                   <property name="url" value="${jdbc.url}"/>
                   <property name="username" value="${jdbc.username}"/>
                   <property name="password" value="${jdbc.password}"/>
               </dataSource>
+              
           </environment>
       </environments>
       <!--mapping文件路径配置-->
@@ -144,6 +155,8 @@ public class UserTest {
 * 运行
 * [项目源码](https://github.com/Charlie12138/EndlessGit/tree/master/protectProject/Test)
 
+------
+
 
 
 ### 2.在maven下运行mybatis遇到的问题：🌓 
@@ -178,6 +191,8 @@ public class UserTest {
 ```
 
 
+
+------
 
 
 
@@ -249,6 +264,8 @@ public class UserTest {
   ......
   ```
 
+------
+
 
 
 #### 注解实现🌴 
@@ -259,6 +276,10 @@ public class UserTest {
   public interface UserMapper {
   	@Insert("insert into User(name, age) values (#{name}, #{age})")
   	public int add(User user);
+  	@Insert("")
+  	@Delete("")
+  	@Update("")
+  	@Select("")
   }
   ```
 
@@ -279,6 +300,8 @@ public class UserTest {
   		System.out.println(ins);
   	}
   ```
+
+  ------
 
   
 
@@ -304,6 +327,8 @@ public class UserTest {
             </dataSource>
   ```
 
+  ------
+
   
 
 ### 5.为实体类定义别名,简化sql映射xml文件中的引用🌓 
@@ -317,6 +342,8 @@ public class UserTest {
           <package name="com.lql.pojo"/><!--userMapper.xml中直接写实体类名-->
       </typeAliases>
   ```
+
+  ------
 
   
 
@@ -340,6 +367,8 @@ public class UserTest {
       </root>
   </log4j:configuration>
   ```
+
+  ------
 
   
 
@@ -369,6 +398,10 @@ public class UserTest {
 ```
 
 
+
+### 
+
+------
 
 ### 8.实现关联表查询
 
@@ -494,13 +527,144 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 
 
 
+------
 
 
 
+### 9.调用[存储过程](http://www.cnblogs.com/geaozhang/p/6797357.html#chuangjian)
+
+```
+#创建存储过程(查询得到男性或女性的数量, 如果传入的是0就女性否则是男性)
+DELIMITER $
+CREATE PROCEDURE mybatis.ges_user_count(IN sex_id INT, OUT user_count INT)
+BEGIN  
+IF sex_id=0 THEN
+SELECT COUNT(*) FROM mybatis.p_user WHERE p_user.sex='女' INTO user_count;
+ELSE
+SELECT COUNT(*) FROM mybatis.p_user WHERE p_user.sex='男' INTO user_count;
+END IF;
+END 
+$
+```
 
 
 
+* mapper的配置
+
+  ```
+  <select id="getCount" statementType="CALLABLE" parameterMap="getCountMap">
+  		<!--第一个问号代表性别，第二个问号代表人数-->
+  	 	call mybatis.get_user_count(?,?) 
+  </select>
+  
+   <parameterMap type="java.util.Map" id="getCountMap">
+   	<parameter property="sex_id" mode="IN" jdbcType="INTEGER"/>
+   	<parameter property="user_count" mode="OUT" jdbcType="INTEGER"/>
+   </parameterMap>
+  
+  ```
+
+* 测试
+
+  ```
+  Map<String, Integer> paramMap = new HashMap<>();
+  paramMap.put("sex_id", 0);
+  paramMap.put("user_count", -1);
+  session.selectOne(statement, paramMap);		
+  Integer userCount = paramMap.get("user_count");
+  System.out.println(userCount);
+  ```
+
+  ![](https://raw.githubusercontent.com/Charlie12138/EndlessGit/master/picture/tupian3.png)
+
+------
 
 
 
+### 10.Mybatis缓存
 
+:one:**一级缓存**:是session级别的缓存
+
+```
+public void testCache1() {
+	SqlSession session = MybatisUtils.getSession();
+	String statement = "com.atguigu.mybatis.test8.userMapper.getUser";
+	
+	
+	/*
+	*第一次查询
+	*/
+	User user = session.selectOne(statement, 1); 
+	System.out.println(user);
+	
+	/*
+	 * 第二次查询时一级缓存默认就会被使用，所以不会查询两次，而是使用session中缓存的上一次查询到的结果
+	 */	
+	user = session.selectOne(statement, 1);
+	System.out.println(user);
+	
+	/*
+	 * 必须是同一个Session,如果session对象已经close()过了或者是新创建的session就不可能用了 
+	 */
+	session = MybatisUtils.getSession();//不同的session
+	user = session.selectOne(statement, 1);
+	System.out.println(user);
+
+	/*
+	*执行过session.clearCache()清理缓存，就要重新查询
+	 */
+	session.clearCache(); 
+	user = session.selectOne(statement, 2);
+	System.out.println(user);
+	
+	/*
+	 *执行过增删改的操作(这些操作都会清理缓存)
+	 */
+	session.update("com.atguigu.mybatis.test8.userMapper.updateUser",
+			new User(2, "user", 23));
+	user = session.selectOne(statement, 2);
+	System.out.println(user);
+}
+```
+
+------
+
+:two:**二级缓存**：添加一个<cache>在userMapper.xml中
+
+```
+<mapper namespace="com.atguigu.mybatis.test8.userMapper"><cache/>
+```
+
+```
+	/*
+	*不同session也可以只查询一次
+	*/
+	
+	SqlSession session = MybatisUtils.getSession();
+	User user = session.selectOne(statement, 1);
+	session.commit();
+	System.out.println("user="+user);
+	
+	SqlSession session2 = MybatisUtils.getSession();
+	user = session2.selectOne(statement, 1);
+	session.commit();
+	System.out.println("user2="+user);
+```
+
+1. 映射语句文件中的所有select语句将会被缓存。 
+
+2. 映射语句文件中的所有insert，update和delete语句会刷新缓存。 
+
+3. 缓存会使用Least Recently Used（LRU，最近最少使用的）算法来收回。
+
+4. 缓存会根据指定的时间间隔来刷新。
+
+5. 缓存会存储1024个对象 
+
+   <cache eviction="FIFO"  //回收策略为先进先出
+
+   ​	flushInterval="60000" //自动刷新时间60s
+
+   ​	size="512" //最多缓存512个引用对象
+
+   ​	readOnly="true"/> 
