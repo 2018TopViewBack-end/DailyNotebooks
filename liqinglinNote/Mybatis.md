@@ -668,3 +668,5 @@ public void testCache1() {
    ​	size="512" //最多缓存512个引用对象
 
    ​	readOnly="true"/> 
+
+### 11.demo[源码](https://github.com/Charlie12138/EndlessGit/tree/master/protectProject/mybatisdemo)
