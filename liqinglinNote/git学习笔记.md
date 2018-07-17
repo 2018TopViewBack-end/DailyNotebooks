@@ -4,8 +4,9 @@
 **2**.添加文件到Git仓库，分两步：  
 第一步，使用命令==git add <file>==，注意，可反复多次使用，添加多个文件；  
 第二步，使用命令==git commit==，完成。  
-简单解释一下git commit命令，-m后面输入的是本次提交的说明，可以输入任意内容
----
+
+*简单解释一下git commit命令，-m后面输入的是本次提交的说明，可以输入任意内容*
+
 ## 版本回退
 ---
 - 1.==git status==命令可以让我们时刻掌握仓库当前的状态  
@@ -119,7 +120,7 @@
 
    * 最后一步就是把`.gitignore`也提交到Git，就完成了！当然检验`.gitignore`的标准是`git status`命令是不是说`working directory clean`。
 
-   ==使用Windows的童鞋注意了，如果你在资源管理器里新建一个`.gitignore`文件，它会非常弱智地提示你必须输入文件名，但是在文本编辑器里“保存”或者“另存为”就可以把文件保存为`.gitignore`了。==
+   ==使用Windows注意了，如果你在资源管理器里新建一个`.gitignore`文件，它会提示你必须输入文件名，但是在文本编辑器里“保存”或者“另存为”就可以把文件保存为`.gitignore`了。==
 
    有些时候，你想添加一个文件到Git，但发现添加不了，原因是这个文件被`.gitignore`忽略了：
 
@@ -149,3 +150,65 @@
 
    - 忽略某些文件时，需要编写`.gitignore`；
    - `.gitignore`文件本身要放到版本库里，并且可以对`.gitignore`做版本管理！
+
+------
+
+###  新增
+
+* 每次提交，Git都把它们串成一条时间线，这条时间线就是一个分支 ，也是主分支master。master指向的是当前提交，HEAD指向的是最新的提交。
+
+* 每提交一次，master向前移动一步。
+
+* 建一个分支dev它会指向master指向的提交。对工作区的修改和提交就是针对`dev`分支了，比如新提交一次后，`dev`指针往前移动一步，而`master`指针不变。
+
+* 用命令“git merge dev”把dev分支合并到master上。（“Fast-forward ”表示直接把`master`指向`dev`的当前提交，合并速度非常快。）
+
+* ```
+  Git鼓励大量使用分支：
+  
+  查看分支：git branch
+  
+  创建分支：git branch <name>
+  
+  切换分支：git checkout <name>
+  
+  创建+切换分支：git checkout -b <name>
+  
+  合并某分支到当前分支：git merge <name>
+  
+  删除分支：git branch -d <name>
+  ```
+
+   合并分支时，加上`--no-ff`参数就可以用普通模式合并，合并后的历史有分支，能看出来曾经做过合并，而`fast forward`合并就看不出来曾经做过合并。 从分支历史上就可以看出分支信息。 
+
+* Git还提供了一个`stash`功能，可以把当前工作现场“储藏”起来，等以后恢复现场后继续工作。
+
+* 当修复了紧急bug回来master，可以用“git stash list”查看现有stash。
+
+  * 一是用`git stash apply`恢复，但是恢复后，stash内容并不删除，你需要用`git stash drop`来删除；
+  * 另一种方式是用`git stash pop`，恢复的同时把stash内容也删了：
+
+* 开发一个新feature，最好新建一个分支；如果要丢弃一个没有被合并过的分支，可以通过`git branch -D <name>`强行删除。
+
+* 你的小伙伴已经向`origin/dev`分支推送了他的提交，而碰巧你也对同样的文件作了修改，并试图推送，就会推送失败，因为你的小伙伴的最新提交和你试图推送的提交有冲突，解决办法也很简单，Git已经提示我们，先用`git pull`把最新的提交从`origin/dev`抓下来，然后，在本地合并，解决冲突，再推送。`git pull`也失败的话：
+
+* ```
+  $ git pull
+  There is no tracking information for the current branch.
+  Please specify which branch you want to merge with.
+  See git-pull(1) for details.
+  
+      git pull <remote> <branch>
+  
+  If you wish to set tracking information for this branch you can do so with:
+  
+      git branch --set-upstream-to=origin/<branch> dev
+  ```
+
+*  原因是没有指定本地`dev`分支与远程`origin/dev`分支的链接，根据提示，设置`dev`和`origin/dev`的链接：
+
+```
+$ git branch --set-upstream-to=origin/dev dev
+Branch 'dev' set up to track remote branch 'dev' from 'origin'.
+```
+
