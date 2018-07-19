@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/zhangmiaoxin-core/zhangmiaoxin-core.iml" filepath="$PROJECT_DIR$/zhangmiaoxin-core/zhangmiaoxin-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zhangmiaoxin-model/zhangmiaoxin-model.iml" filepath="$PROJECT_DIR$/zhangmiaoxin-model/zhangmiaoxin-model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zhangmiaoxin-persist/zhangmiaoxin-persist.iml" filepath="$PROJECT_DIR$/zhangmiaoxin-persist/zhangmiaoxin-persist.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zhangmiaoxin-utils/zhangmiaoxin-utils.iml" filepath="$PROJECT_DIR$/zhangmiaoxin-utils/zhangmiaoxin-utils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zhangmiaoxin-web/zhangmiaoxin-web.iml" filepath="$PROJECT_DIR$/zhangmiaoxin-web/zhangmiaoxin-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zhangmiaoxin_managementSystem.iml" filepath="$PROJECT_DIR$/zhangmiaoxin_managementSystem.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="zhangmiaoxin-core" />
+        <module name="zhangmiaoxin-model" />
+        <module name="zhangmiaoxin-persist" />
+        <module name="zhangmiaoxin-utils" />
+        <module name="zhangmiaoxin-web" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="zhangmiaoxin-core" target="1.8" />
+      <module name="zhangmiaoxin-model" target="1.8" />
+      <module name="zhangmiaoxin-persist" target="1.8" />
+      <module name="zhangmiaoxin-utils" target="1.8" />
+      <module name="zhangmiaoxin-web" target="1.8" />
+      <module name="zhangmiaoxin_managementSystem" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
