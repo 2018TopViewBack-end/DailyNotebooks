@@ -146,4 +146,4 @@ ApplicationContextAware:所在上下文
 
 ##### :six:AOP
 
-![](https://raw.githubusercontent.com/Charlie12138/EndlessGit/master/picture/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20180723220227.png)
+![](https://raw.githubusercontent.com/Charlie12138/EndlessGit/master/picture/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20180723221124.png)
