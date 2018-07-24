@@ -9,7 +9,7 @@
 ### 0.随记
 
 * ```xml
-  <span style="font-size:14px;"><configuration>
+  <configuration>
       <typeAliases>
         <!--
         通过package, 可以直接指定package的名字， mybatis会自动扫描你指定包下面的javabean,
@@ -19,10 +19,8 @@
          -->
         <typeAlias alias="UserEntity" type="com.dy.entity.User"/>
     </typeAliases>
-    
     ......
-    
-  </configuration></span>
+  </configuration>
   ```
 
 * 在mybatis中，**映射文件中的namespace是用于绑定Dao接口的，即面向接口编程。** 
@@ -33,9 +31,8 @@
 
 * 一定要记得**`sqlSession.commit();//提交事务`**
 
-* 一定要记得:
-
 * ```java
+  //一定要记得:
   finally{
       //在finally语句中确保资源被顺利关闭
       if(sqlSession != null){
@@ -44,9 +41,18 @@
   }
   ```
 
+* 一定要记得:MyBatis中Mapper.xml里的sql语句的参数是用**"#{  }"**来表示的
+
 * **`<resource>`**标签中要用"/"来分隔(但文件名和文件类型中间仍要用"."隔开)，而其他的用"."来分隔
 
 * MyBatis 需要POJO的无参数的构造函数
+
+* 如果想要通过sql语句获得List，需要在接口中定义返回值为List的方法
+
+* ### sessionFactory.openSession(true)可以使sqlSession自动提交
+
+* ### **`<mappers>`**节点下没办法同时使用**`<mapper>`**和`<package>`节点的问题，编译器一直报错，最后查询dtd约束才发现，配置文件要求先使用**`<mapper>`**节点，再使用**`<package>`**节点，顺序混乱就会报错 
+
 
 ### 生命周期
 
@@ -173,5 +179,126 @@
   </select>
   ```
 
+### 一对一关联
 
+* ```xml
+  <!--
+  方式一： 嵌套结果：使用嵌套结果映射来处理重复的联合结果的子集
+  封装联表查询的数据(去除重复的数据)
+  select * from class c, teacher t where c.teacher_id=t.t_id and c.c_id=1
+  -->
+  <select id="getClass" parameterType="int" resultMap="ClassResultMap">
+  select * from class c, teacher t where c.teacher_id=t.t_id and c.c_id=#{id}
+  </select>
+  <resultMap type="_Classes" id="ClassResultMap">
+  <id property="id" column="c_id"/>
+  <result property="name" column="c_name"/>
+  <association property="teacher" javaType="_Teacher">
+  <id property="id" column="t_id"/>
+  <result property="name" column="t_name"/>
+  </association>
+  </resultMap>
+  <!--
+  方式二： 嵌套查询：通过执行另外一个 SQL 映射语句来返回预期的复杂类型
+  SELECT * FROM class WHERE c_id=1;
+  SELECT * FROM teacher WHERE t_id=1 //1 是上一个查询得到的 teacher_id 的值
+  -->
+  <select id="getClass2" parameterType="int" resultMap="ClassResultMap2">
+  select * from class where c_id=#{id}
+  </select>
+  <resultMap type="_Classes" id="ClassResultMap2">
+  <id property="id" column="c_id"/>
+  <result property="name" column="c_name"/>
+  <association property="teacher" column="teacher_id" select="getTeacher">
+  </association>
+  </resultMap>
+  <select id="getTeacher" parameterType="int" resultType="_Teacher">
+  SELECT t_id id, t_name name FROM teacher WHERE t_id=#{id}
+  </select>
+  ```
+
+* ```xml
+  <!--
+  	association 用于一对一的关联查询的
+  	property 对象属性的名称
+  	javaType 对象属性的类型
+  	column 所对应的外键字段名称
+  	select 使用另一个查询封装的结果
+  -->
+  ```
+
+### 一对多关联
+
+* ```xml
+  <!--
+  方式一: 嵌套结果: 使用嵌套结果映射来处理重复的联合结果的子集
+  SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=s.class_id AND c.c_id=1
+  -->
+  <select id="getClass3" parameterType="int" resultMap="ClassResultMap3">
+  select * from class c, teacher t,student s where c.teacher_id=t.t_id and c.C_id=s.class_id and
+  c.c_id=#{id}
+  </select>
+  <resultMap type="_Classes" id="ClassResultMap3">
+  <id property="id" column="c_id"/>
+  <result property="name" column="c_name"/>
+  <association property="teacher" column="teacher_id" javaType="_Teacher">
+  <id property="id" column="t_id"/>
+  <result property="name" column="t_name"/>
+  </association>
+  <!-- ofType 指定 students 集合中的对象类型 -->
+  <collection property="students" ofType="_Student">
+  <id property="id" column="s_id"/>
+  <result property="name" column="s_name"/>
+  </collection>
+  </resultMap>
+  <!--
+  方式二：嵌套查询：通过执行另外一个 SQL 映射语句来返回预期的复杂类型
+  SELECT * FROM class WHERE c_id=1;
+  SELECT * FROM teacher WHERE t_id=1 //1 是上一个查询得到的 teacher_id 的值
+  SELECT * FROM student WHERE class_id=1 //1 是第一个查询得到的 c_id 字段的值
+  -->
+  <select id="getClass4" parameterType="int" resultMap="ClassResultMap4">
+  select * from class where c_id=#{id}
+  </select>
+  <resultMap type="_Classes" id="ClassResultMap4">
+  <id property="id" column="c_id"/>
+  <result property="name" column="c_name"/>
+  <association property="teacher" column="teacher_id" javaType="_Teacher"
+  select="getTeacher2"></association>
+  <collection property="students" ofType="_Student" column="c_id" select="getStudent"></collection>
+  </resultMap>
+  <select id="getTeacher2" parameterType="int" resultType="_Teacher">
+  SELECT t_id id, t_name name FROM teacher WHERE t_id=#{id}
+  </select>
+  <select id="getStudent" parameterType="int" resultType="_Student">
+  SELECT s_id id, s_name name FROM student WHERE class_id=#{id}
+  </select>
+  ```
+
+* ```xml
+  <!--
+  	collection 做一对多关联查询的
+  	ofType 指定集合中元素对象的类型
+  -->
+  ```
+
+* 
+
+### 模糊查询
+
+* ```xml
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.atguigu.day03_mybatis.test6.userMapper">
+  <select id="getUser" parameterType="com.atguigu.day03_mybatis.test6.ConditionUser"
+  resultType="com.atguigu.day03_mybatis.test6.User">
+  select * from d_user where age>=#{minAge} and age&lt;=#{maxAge}
+  <if test='name!="%null%"'>and name like #{name}</if>
+      <!-- 其中#{name}里面是（"%"+realName+"%"）-->
+  </select>
+  </mapper>
+  ```
+
+* 
 

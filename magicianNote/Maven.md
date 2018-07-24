@@ -17,21 +17,48 @@
 ### n.随记
 
 * jar包和war包所存在的原因是，为了项目的部署(Deployment)和发布，通常把项目打包，通常在打包部署的时候，会在里面加上部署的相关信息。这个打包实际上就是**把代码和依赖的东西压缩在一起**，变成后缀名为.jar和.war的文件，就是我们说的jar包和war包。但是这个“压缩包”可以被编译器直接使用，把war包放在tomcat目录的webapp下，tomcat服务器在启动的时候可以直接使用这个war包。通常tomcat的做法是解压，编译里面的代码，所以当文件很多的时候，tomcat的启动会很慢。 
+
 * jar包是java打的包，war包可以理解为javaweb打的包，这样会比较好记。jar包中只是用java来写的项目打包来的，里面只有编译后的class和一些部署文件。而war包里面的东西就全了，包括写的代码编译成的class文件，依赖的包，配置文件，所有的网站页面，包括html，jsp等等。一个war包可以理解为是一个web项目，里面是项目的所有东西。 
+
 * 什么时候使用jar包或war包？当你的项目在没有完全完成的时候，不适合使用war文件，因为你的类会由于调试之类的经常改，这样来回删除、创建war文件很不方便，来回修改，来回打包，最好是你的项目已经完成了，不做修改的时候，那就打个war包吧，这个时候一个war文件就相当于一个web应用程序；而jar文件就是把类和一些相关的资源封装到一个包中，便于程序中引用。 
+
 * **`<dependencyManagement>`**为依赖管理
+
 * **`<execution>`**将插件绑定在某个阶段
+
 * 继承的绝对路径是pom的文件
+
 * 聚合是模块(module)的位置
+
+* ```xml
+  <!--由于Maven中jdk默认版本为1.5,所以一般需要在pom.xml中加入该插件来将jdk版本改为1.8-->
+  <build>
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                  <source>1.8</source>
+                  <target>1.8</target>
+              </configuration>
+          </plugin>
+      </plugins>
+  </build>
+  ```
+
+* 
+
 * site![1531298117965](https://github.com/630231047/notebook/blob/master/1531298117965.png?raw=true)
+
 * 插件的安装方法
+
 * ![1531298309002](https://github.com/630231047/notebook/blob/master/1531298309002.png?raw=true)
 
 ---
 
 ### 依赖的范围
 
-* 依赖的使用场景
+* ### 依赖的使用场景
 
   * 开发时
   * 编译时
