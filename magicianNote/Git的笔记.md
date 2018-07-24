@@ -1,46 +1,56 @@
 # Git 笔记
 
 [TOC]
+## 参考资料
+
+* [简单对比git pull和git pull --rebase的使用](https://www.cnblogs.com/kevingrace/p/5896706.html)
+
+* [git rebase的用法](https://blog.csdn.net/TTKatrina/article/details/79288238)
+
+  
+
 ## n.随记
+
 > git checkout - - file命令中的- -很重要，没有- -，就变成了“切换到另一个分支”的命令
-> **`：wq`**可用来退出编辑界面
->
-> 路径名或者变量中间有空格时，可以用双引号括起来，不然会报错：bash: cd: too many arguments 
+>**`：wq`**可用来退出编辑界面
 
 ##m.git常用命令
 >Git基本常用命令如下：
-　　**`mkdir`**：         XX (创建一个空目录 XX指目录名)
-　　**`cd`**:                移动到该路径
-　　**`pwd`**：          显示当前目录的路径。
-　　**`git init`**         把当前的目录变成可以管理的git仓库，生成隐藏.git文件。
-　　**`git add XX`**       把xx文件添加到暂存区去。
-　　**`git commit –m “XX`**”  提交文件 –m 后面的是注释。
-　　**`git status `**       查看仓库状态
-　　**`git diff  XX`**      查看XX文件修改了那些内容
-　　**`git log `**     查看历史记录 (缩写为**`git lg`**)
-　　**`git reset  --hard HEAD^ `**或者 **`git reset  --hard HEAD~ `**回退到上一个版本
-　　(如果想回退到100个版本，使用git reset –hard HEAD~100 )
-　　**`cat XX `**        查看XX文件内容
-　　**`git reflog `**      查看历史记录的版本号id
-　　**`git checkout -- XX `** 把XX文件在工作区的修改全部撤销。
-　　**`git rm XX`**          删除XX文件
-　　**`git remote add origin https://github.com/tugenhua0707/testgit`** 关联一个远程库
-　　**`git push –u(第一次要用-u 以后不需要) origin master `**把当前master分支推送到远程库
-　　**`git clone https://github.com/tugenhua0707/testgit `** 从远程库中克隆
-　　**`git checkout –b dev`**  创建dev分支 并切换到dev分支上
-　　**`git branch `** 查看当前所有的分支
-　　**`git checkout master`** 切换回master分支
-　　**`git merge dev`**    在当前的分支上合并dev分支
-　　**`git branch –d dev`** 删除dev分支
-　　**`git branch name`**  创建分支
-　　**`git stash`** 把当前的工作隐藏起来 等以后恢复现场后继续工作
-　　**`git stash list`** 查看所有被隐藏的文件列表
-　　**`git stash apply`** 恢复被隐藏的文件，但是内容不删除
-　　**`git stash drop`** 删除文件
-　　**`git stash pop`** 恢复文件的同时 也删除文件
-　　**`git remote `**查看远程库的信息
-　　**`git remote –v`** 查看远程库的详细信息
-　　**`git push origin master `** Git会把master分支推送到远程库对应的远程分支上
+>　　**`mkdir`**：         XX (创建一个空目录 XX指目录名)
+>　　**`cd`**:                移动到该路径
+>　　**`pwd`**：          显示当前目录的路径。
+>　　**`git init`**         把当前的目录变成可以管理的git仓库，生成隐藏.git文件。
+>　　**`git add XX`**       把xx文件添加到暂存区去。
+>　　**`git commit –m “XX`**”  提交文件 –m 后面的是注释。
+>　　**`git status `**       查看仓库状态
+>　　**`git diff  XX`**      查看XX文件修改了那些内容
+>　　**`git log `**     查看历史记录 (缩写为**`git lg`**)
+>　　**`git reset  --hard HEAD^ `**或者 **`git reset  --hard HEAD~ `**回退到上一个版本
+>　　(如果想回退到100个版本，使用git reset –hard HEAD~100 )
+>　　**`cat XX `**        查看XX文件内容
+>　　**`git reflog `**      查看历史记录的版本号id
+>　　**`git checkout -- XX `** 把XX文件在工作区的修改全部撤销。
+>　　**`git rm XX`**          删除XX文件
+>　　**`git remote add origin https://github.com/tugenhua0707/testgit`** 关联一个远程库
+>　　**`git push –u(第一次要用-u 以后不需要) origin master `**把当前master分支推送到远程库
+>　　**`git clone https://github.com/tugenhua0707/testgit `** 从远程库中克隆
+>       **`git clone https://github.com/tugenhua0707/testgit--depth=1 `** 浅复制，只下载最近一次的版本
+>​      **`git clone -b <branch name> [remote repository address] `** 克隆某一个特定的远程分支
+>　　**`git fetch --unshallow`** 获取完整历史信息
+>　　**`git checkout –b dev`**  创建dev分支 并切换到dev分支上
+>　　**`git branch `** 查看当前所有的分支
+>　　**`git checkout master`** 切换回master分支
+>　　**`git merge dev`**    在当前的分支上合并dev分支
+>　　**`git branch –d dev`** 删除dev分支
+>　　**`git branch name`**  创建分支
+>　　**`git stash`** 把当前的工作隐藏起来 等以后恢复现场后继续工作
+>　　**`git stash list`** 查看所有被隐藏的文件列表
+>　　**`git stash apply`** 恢复被隐藏的文件，但是内容不删除
+>　　**`git stash drop`** 删除文件
+>　　**`git stash pop`** 恢复文件的同时 也删除文件
+>　　**`git remote `**查看远程库的信息
+>　　**`git remote –v`** 查看远程库的详细信息
+>　　**`git push origin master `** Git会把master分支推送到远程库对应的远程分支上
 
 ## 1.创建版本库
 > \$  **`mkdir learngit`**
@@ -88,7 +98,7 @@
 
 ### 删除文件
 >一是确实要从版本库中删除该文件，那就用命令git rm删掉，并且git commit：
->\$ **`git rm test.txt`**
+>\$ **`git rm test.txt`**  
 >\$ **`git commit -m "remove test.txt"`**
 >另一种情况是删错了，因为版本库里还有呢，所以可以很轻松地把误删的文件恢复到最新版本：
 >\$ **`git checkout -- test.txt`**
@@ -180,3 +190,13 @@
 
 ## 14.配置别名
 >eg: 用st来代替status \$ **`git config --global alias.st status`**
+
+
+
+## 15.git pull –rebase 理解
+
+* git pull –rebase这个命令做了以下内容：  
+  * a.把你 commit 到本地仓库的内容，取出来放到暂存区(stash)（这时你的工作区是干净的）  
+  * b.然后从远端拉取代码到本地，由于工作区是干净的，所以不会有冲突  
+  * c.从暂存区把你之前提交的内容取出来，跟拉下来的代码合并  所以 rebase 在拉代码前要确保你本地工作区是干净的，如果你本地修改的内容没完全 commit 或者 stash，就会 rebase 失败。 
+

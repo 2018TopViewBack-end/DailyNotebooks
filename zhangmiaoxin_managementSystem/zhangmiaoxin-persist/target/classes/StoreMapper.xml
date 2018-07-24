@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhangmiaoxin.www.dao.StoreMapper">
+    <select id="listStore" resultMap="listStoreMap">
+        select id,pic,name,tel,address,user_id,category_id,sales from store
+        where usable=1 order by sales desc
+    </select>
+    <select id="getCategory" resultType="string" >
+        select name category from category  where id=#{id}
+    </select>
+    <resultMap id="listStoreMap" type="Store">
+        <id property="id" column="id"/>
+        <result property="pic" column="pic"/>
+        <result property="name" column="name"/>
+        <result property="tel" column="tel"/>
+        <result property="address" column="address"/>
+        <result property="ownerId" column="user_id"/>
+        <result property="sales" column="sales"/>
+        <association property="categoryName" select="getCategory" column="category_id" />
+    </resultMap>
+
+    <update id="updateSales">
+        update store set sales=sales+#{sales} where id=#{storeId}
+    </update>
+
+    <select id="getStore" resultMap="listStoreMap" parameterType="int">
+        select * from store where user_id=#{userId}
+    </select>
+
+    <select id="checkUsable" parameterType="int" resultType="string">
+        select usable from store where user_id=#{userId}
+    </select>
+
+    <select id="listStoreByAdmin" resultMap="listStoreMap2">
+        select * from store where id in
+        <foreach collection="list" item="storeId" index="index" close=")" separator="," open="(">
+            #{storeId}
+        </foreach>
+    </select>
+    <resultMap id="listStoreMap2" type="Store">
+        <result property="pic" column="pic"/>
+        <result property="name" column="name"/>
+        <result property="tel" column="tel"/>
+        <result property="address" column="address"/>
+        <result property="sales" column="sales"/>
+        <association property="categoryName" select="getCategory" column="category_id" />
+    </resultMap>
+
+    <select id="getStoreId" parameterType="int" resultType="int">
+        select id from store where user_id=#{user_id}
+    </select>
+
+    <select id="listOnStore" resultMap="listStoreMap3">
+        select * from store where usable=2
+    </select>
+    <resultMap id="listStoreMap3" type="Store">
+        <id property="id" column="id"/>
+        <result property="pic" column="pic"/>
+        <result property="name" column="name"/>
+        <result property="tel" column="tel"/>
+        <result property="address" column="address"/>
+        <result property="ownerId" column="user_id"/>
+        <association property="categoryName" select="getCategory" column="category_id" />
+    </resultMap>
+
+    <update id="allowStore" parameterType="int">
+        update store set usable=1 where id=#{id}
+    </update>
+
+    <select id="selectStoreName" resultType="string" parameterType="int">
+        select name from store where id=#{id}
+    </select>
+
+    <insert id="applyStore" parameterType="Store">
+        insert store values(null,#{name},#{tel},#{address},#{pic},#{ownerId},#{categoryId},default,default)
+    </insert>
+</mapper>

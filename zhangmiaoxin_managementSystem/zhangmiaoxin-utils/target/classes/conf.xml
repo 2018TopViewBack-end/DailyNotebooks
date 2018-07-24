@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <!--数据库配置-->
+    <properties resource="db.properties"/>
+
+    <settings>
+        <setting name="cacheEnabled" value="false"/>
+        <setting name="localCacheScope" value="STATEMENT" />
+    </settings>
+
+    <!--别名-->
+    <typeAliases>
+        <!--<typeAlias type="com.zhangmiaoxin.www.po.User" alias="User"/>-->
+        <package name="com.zhangmiaoxin.www.po"/>
+    </typeAliases>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="UserMapper.xml"/>
+        <mapper resource="StoreMapper.xml"/>
+        <mapper resource="ReceiverMapper.xml"/>
+        <mapper resource="CategoryMapper.xml"/>
+        <mapper resource="FoodMapper.xml"/>
+        <mapper resource="OrderMapper.xml"/>
+    </mappers>
+</configuration>

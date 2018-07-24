@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhangmiaoxin.www.dao.OrderMapper">
+    <insert id="addOrder" parameterType="Order">
+        insert oorder values(null,#{receiverId},#{message},#{date},#{status},#{storeId},#{userId})
+    </insert>
+
+    <select id="getOrderId" parameterType="string" resultType="integer">
+        select id from oorder where date=#{date}
+    </select>
+
+    <insert id="addOrderItem" parameterType="OrderItem">
+        insert orderItem values(null,#{foodId},#{orderId},#{buyerId},#{number},#{price})
+    </insert>
+
+    <select id="listOrder" parameterType="int" resultType="Order">
+        select id,receiver_id receiverId,store_id storeId,message,date,status
+        from oorder where user_id=#{userId} order by id desc
+    </select>
+
+    <select id="listOrderReceiver" resultType="Receiver" parameterType="integer">
+        select name,tel,address from receiver where id=#{id}
+    </select>
+
+    <select id="listOrderStore" resultType="Store" parameterType="integer">
+        select name,pic from store where id=#{id}
+    </select>
+
+    <select id="listOrderItem" resultType="OrderItem">
+        select food_id foodId,number from orderitem where order_id=#{orderId}
+    </select>
+
+    <select id="listOrderFood" resultType="Food" parameterType="integer" flushCache="true" useCache="false">
+        select name,price,pic from food where id in
+        <foreach collection="list" item="id" index="index" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="acceptOrder" parameterType="int">
+        update oorder set status='待接单' where id=#{id}
+    </update>
+
+    <select id="listOrderBySeller" parameterType="int" resultType="Order">
+        select id,receiver_id receiverId,message,date,status from oorder where store_id=#{storeId} order by id desc
+    </select>
+</mapper>
