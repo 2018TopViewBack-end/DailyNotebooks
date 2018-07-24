@@ -210,13 +210,13 @@
 
 ### 一对多
 
-	#### 	联表查询
+#### 联表查询
 
 - 当查询一个班级和其中的学生时，班级和学生是一对多的关系。以下为示例代码
 
   ```xml
   <select id="getClass" parameterType="int" resultMap="getClassMap">
-          select * from class c, student s where c.c_id=s.class_id and c.c_id=#{id}
+      select * from class c, student s where c.c_id=s.class_id and c.c_id=#{id}
   </select>
       
   <resultMap id="getClassMap" type="Classes">
@@ -245,7 +245,7 @@
   </select>
   <select id="getStudent" resultType="Student">
       select s_id id, s_name name from student where class_id=#{id}
-  </select>
+  </select>	
   
   <resultMap id="getClass2Map" type="Classes">
       <id property="id" column="c_id"/>

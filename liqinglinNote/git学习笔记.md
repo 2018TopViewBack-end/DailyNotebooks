@@ -33,9 +33,9 @@
 
 ## 从本地上传文件到organization
 
-* 克隆一个库到自己电脑上：git clone + 库地址
+* 克隆一个库到自己电脑上：git clone + 组织的库地址
 
-* 将自己的修改并入
+* 将自己的修改添加到本地的clone下来的仓库
 
 * git add .
 
@@ -212,3 +212,6 @@ $ git branch --set-upstream-to=origin/dev dev
 Branch 'dev' set up to track remote branch 'dev' from 'origin'.
 ```
 
+* 遇到蓝色字体要写说明怎么退出？
+
+  **按住shift ZZ 就返回并且保存了**
