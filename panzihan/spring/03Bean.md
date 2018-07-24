@@ -1,30 +1,51 @@
 ## 一、Bean的生命周期
 
 1. 实例化（当我们的程序加载beans.xml文件），把我们的bean（前提是scope=singleton）实例化到内存中。
+	默认调用无参数的构造方法
+	```java
+	public UserService(){
+        System.out.println("调用无参的构造方法");
+    }
+	```
 2. 调用set方法设置属性。
+	```java
+	public void setName(String name) {
+        System.out.println("调用setName");
+        this.name = name;
+    }
+	```
 3. 如果你实现了bean名字关注接口（BeanNameAware）则可以通过setBeanName获取id号。
 
     ```java
-    public void setBeanName(String name) {}
+    public void setBeanName(String name) {
+		System.out.println("setBeanName " + name);
+	}
     ```
 
 4. 如果你实现了 bean 工厂关注接口（BeanFactoryAware）则可以获取BeanFactory。
 
    ```java
-   public void setBeanFactory(BeanFactory beanFactory) throws BeansException {}
+   public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+   		System.out.println("setBeanFactory " + beanFactory.getClass().getName());
+   }
    ```
 
 5. 如果你实现了 ApplicationContextAware 接口，则调用方法
 
     ```java
     // 该方法传递ApplicationContext
-    public void setApplicationContext(ApplicationContext arg0) throws BeansException {}
+    public void setApplicationContext(ApplicationContext arg0) throws BeansException {
+		System.out.println("setApplicationContext " + applicationContext.getClass().getName());
+	}
     ```
 
 6. 如果bean和一个后置处理器关联了，则会自动调用
 
     ```java
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {}
+   	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("postProcessBeforeInitialization : " + bean.getClass().getName() + " : " + beanName);
+        return bean;
+    }
     ```
 
 7. 如果你实现了InitializingBean接口，则会自动调用 afterPropertiesSet（）方法
@@ -36,16 +57,18 @@
 8. 如果自己在<bean init-method="init"/>则可以在bean定义自己的初始化方法。
 
    ```java
-   public void myInit() {}
+   public void myInit() {
+        System.out.println("调用自己的init方法");
+   }
    ```
 
 9. 如果bean和一个后置处理器关联，则会自动去调用 after。
 
    ```java
    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-           System.out.println("postProcessAfterInitialization被调用");
-           return bean;
-   }
+        System.out.println("postProcessBeforeInitialization : " + bean.getClass().getName() + " : " + beanName);
+        return bean;
+    }
    ```
 
 10. 使用我们的bean。
