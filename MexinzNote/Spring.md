@@ -320,7 +320,7 @@
 
 ## 静态代理
 
-	### 角色
+### 角色
 
 - 抽象角色：一般使用接口或者抽象类来实现
 - 真实角色：被代理的角色（如房东）
@@ -405,7 +405,7 @@
 
 ---
 
-## 动态代理
+## 动态代理	
 
 ### 和静态代理的相同点
 
@@ -733,35 +733,33 @@
 
 ## Spring和Mybatis整合
 
-- 下面是一个简单的示例
+1. 第一种方式
+   - bean4.xml的配置文件（Spring的配置文件）
 
-- bean4.xml的配置文件（Spring的配置文件）
+```xml
+<!--配置数据源，mybatis的配置文件就可以不用配了-->
+<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost:3306/mybatis01?useSSL=false"/>
+    <property name="username" value="root"/>
+    <property name="password" value="justinsgf5203!"/>
+</bean>
 
-  ```xml
-  <!--配置数据源，mybatis的配置文件就可以不用配了-->
-  <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-      <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
-      <property name="url" value="jdbc:mysql://localhost:3306/mybatis01?useSSL=false"/>
-      <property name="username" value="root"/>
-      <property name="password" value="justinsgf5203!"/>
-  </bean>
-  
-  <!--配置sqlSessionFactory-->
-  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-      <property name="dataSource" ref="dataSource"/>
-      <!--conf.xml是mybatis的配置文件-->
-      <property name="configLocation" value="conf.xml"/>
-  </bean>
-  <!--通过构造器注入-->
-  <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
-      <constructor-arg index="0" ref="sqlSessionFactory"/>
-  </bean>
-  <!--这个sqlsession是sqlSessionTemplate类的一个对象-->
-  <bean id="userDao" class="com.practice.daoimpl.UserDaoImpl">
-      <property name="sqlSession" ref="sqlSessionTemplate"/>
-  </bean>
-  ```
-
+<!--配置sqlSessionFactory-->
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <!--conf.xml是mybatis的配置文件-->
+    <property name="configLocation" value="conf.xml"/>
+</bean>
+<!--通过构造器注入-->
+<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+    <constructor-arg index="0" ref="sqlSessionFactory"/>
+</bean>
+<!--这个sqlsession是sqlSessionTemplate类的一个对象-->
+<bean id="userDao" class="com.practice.daoimpl.UserDaoImpl">
+    <property name="sqlSession" ref="sqlSessionTemplate"/>
+</bean>
+```
 - mybatis的配置文件
 
   ```xml
@@ -814,6 +812,66 @@
   }
   ```
 
+2. 第二种方式
+
+   - bean4.xml的配置文件
+
+   ```xml
+   <!--配置数据源，mybatis的配置文件就可以不用配了-->
+   <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+       <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+       <property name="url" value="jdbc:mysql://localhost:3306/mybatis01?useSSL=false"/>
+       <property name="username" value="root"/>
+       <property name="password" value="justinsgf5203!"/>
+   </bean>
+   
+   <!--配置sqlSessionFactory-->
+   <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+       <property name="dataSource" ref="dataSource"/>
+       <!--conf.xml是mybatis的配置文件-->
+       <property name="configLocation" value="conf.xml"/>
+   </bean>
+   
+   <!--在spring配置文件中，不需要管理sqlSessionTemplate，在dao的实现中，需要继承SqlSessionDaoSupport，然后直接getSqlSession()来获取sqlSession对象-->
+   <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+       <property name="dataSource" ref="dataSource"/>
+       <property name="configLocation" value="conf.xml"/>
+   </bean>
+   <bean id="userDao" class="com.practice.daoimpl.UserDaoImpl">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+   </bean>
+   ```
+
+   - dao类
+
+   ```java
+   //记得要继承 SqlSessionDaoSupport
+   public class UserDaoImpl extends SqlSessionDaoSupport implements UserMapper {
+       @Override
+       public List<User> listUser() {
+           UserMapper mapper = getSqlSession().getMapper(UserMapper.class);
+           return mapper.listUser();
+       }
+   }
+   ```
+
+   - 测试类不变
+
+3. 第三种
+
+   - bean.xml文件
+
+     ```xml
+     <!--配置sqlSessionFactory-->
+     <!--这里变化的是下面的property，不再需要mybatis的配置文件，将所有的配置信息配置到spring的配置文件中，别忘记把Mapper.xml里面的别名改了，不然会找不到类-->
+     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+         <property name="dataSource" ref="dataSource"/>
+         <property name="mapperLocations" value="UserMapper.xml"/>
+     </bean>
+     ```
+
+     
+
 ## 声明式事务管理
 
 - 简单来说就是把几次对数据库的操作绑定在一起(大的包小的)，只有全部执行成功了，才会修改数据库中的数据
@@ -833,7 +891,7 @@
    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
   ```
 
-  bean.xml文件，**主要看声明式事务配置部分**
+  bean.xml文件，**主要看声明式事务配置部分**，还有不需要管理的sqlSessionFactory部分
 
   ```xml
   <!--配置数据源-->
@@ -845,16 +903,13 @@
   </bean>
   
   <!--配置sqlSessionFactory-->
+  <!--在spring配置文件中，不需要管理sqlSessionTemplate，在dao的实现中，需要继承SqlSessionDaoSupport，然后直接getSqlSession()来获取sqlSession对象-->
   <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
       <property name="dataSource" ref="dataSource"/>
       <property name="configLocation" value="conf.xml"/>
   </bean>
-  <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
-      <constructor-arg index="0" ref="sqlSessionFactory"/>
-  </bean>
-  
   <bean id="userDao" class="com.practice.daoimpl.UserDaoImpl">
-      <property name="sqlSession" ref="sqlSessionTemplate"/>
+      <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
   </bean>
   
   <!--声明式事务配置 开始-->
@@ -866,8 +921,8 @@
   <tx:advice id="txAdvice" transaction-manager="txManager">
       <tx:attributes>
           <!--这里是配置那些方法使用什么样的事务，配置事务的传播特性-->
-          <!--required表示每次使用该方法时，看看当前是否有事务，
-                  没有则开启一个新的事务，增删改都是配置成这个-->
+          <!--required表示每次使用该方法时，看看当前是否有事务，如果有就用当前事务  
+                  没有则开启一个新的事务，增删改都是配置成这个（最常用的）-->
           <!--add加星号表示所有以add开头的方法都遵循这个配置，如果name只有一个星号表示所有方法都适用-->
           <tx:method name="add*" propagation="REQUIRED"/>
           <tx:method name="delete" propagation="REQUIRED"/>
