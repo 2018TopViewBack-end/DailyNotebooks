@@ -83,10 +83,70 @@ AnnotationConfigApplicationContext(Config.class)
 
 ## Spring AOP
 
-### 事务
-
 ### 使用@AspectJ注解驱动切面
 
 最常用。需导入spring-aspects包！
 
-#### 
+## Spring+Mybatis
+
+### MapperScannerConfigurer  P325
+
+## 事务
+
+- **声明式事务的底层原理 ---- AOP**
+
+常用的事务管理器是DataSourceTransactionManager，它的最顶层是PlatformTransactionManager
+
+需要在xml中配置事务管理器：
+
+```xml
+<bean id="transactionManager" class="org.springframnwork.jdbc.datasource
+                                     .DataSourceTransactionManager">
+	<property name="dataSource" ref="dataSource"/>
+</bean>
+```
+
+**配置事务的主流方式：@Transaction注解**：
+
+需在**配置类**中实现TransactionManagementConfigurer的annotationDrivenTransactionManager方法，spring会将其返回值作为程序中的事务管理器，同时要在此类上加上@EnableTransactionManagement注解
+
+![](https://github.com/Medw1nnn/repo-pics/blob/master/%E4%BA%8B%E5%8A%A1.png?raw=true)
+
+@Transactional有几个比较重要的配置项：
+
+1. value或transactionManager--定义事务管理器
+2. isolation--隔离级别（重要）
+3. propagation--传播行为（重要）
+
+### 多事务产生并发问题
+
+其中最主要的就是丢失更新，由此引出隔离级别
+
+### 隔离级别
+
+可以在不同程度下减少丢失更新
+
+首先，丢失更新分为第一类丢失更新（已被数据库克服）和第二类丢失更新
+
+#### SQL的隔离级别定义（级别越高性能越低）：P344
+
+1. 脏读 （dirty read）-- 事务一可以读取事务二未提交的事务
+2. 读/写提交（read commit）-- 一个事务只能读取另一个事务已经提交的数据
+3. 可重复读（repeatable read）-- 克服读写提交产生的不可重复读问题，但会产生幻读
+4. 序列化（Serializable）-- 克服幻读
+
+大部分场景下，企业会选择读写提交的方式，但需要克服读写一致性问题
+
+### 传播行为
+
+指方法间调用事务策略的问题，如一个方法调用另一个方法时，是否需要创建新事务
+
+**传播行为共有七种**，默认为REQUIRED，REQUIRES_NEW 和 NESTED(嵌套事务) 也比较重要
+
+### @Transaction自调用失效问题
+
+因为实现原理是aop->动态代理，自己调用自己时并不存在代理对象的调用，所以不会产生AOP为我们设置@Transaction配置的参数，从而产生自调用注解失效问题
+
+
+
+- 在log4j配置文件中加入 log4j.logger.org.springframework=DEBUG,使得Spring在运行中会输出对应的日志
