@@ -63,3 +63,6 @@ Description: The method received in the request-line is known by the origin serv
 	}
 ```
 
+:five:springMVC视频测试国际化出现乱码 ==`???i18n.username???`== ，解决方法：在setting中把编码设置为UTF-8。
+
+浏览器的语言要移到顶部才能让语言成功切换。
