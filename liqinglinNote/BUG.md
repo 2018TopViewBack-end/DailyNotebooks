@@ -32,6 +32,34 @@ Cause: org.apache.ibatis.executor.ExecutorException: No constructor found in com
 No constructor found in com.tszhao.dao.User matching [java.lang.Integer, java.lang.String, java.lang.Integer]
 ```
 
-
 (它想找的是传入Integer的构造函数， 而你只有传入int的构造函数)所以要么不显式地指定构造函数，使用自动生成的默认构造函数要么在自己指定的构造函数中使用包装类型（当然也可以直接在你的那行构造函数上面显示地添加一个无参构造函数，不过看起来好像是多此一举）
+
+:three:
+
+```
+25-Jul-2018 22:39:02.846 警告 [http-nio-8080-exec-6] org.springframework.web.servlet.DispatcherServlet.noHandlerFound No mapping found for HTTP request with URI [/helloworld] in DispatcherServlet with name 'dispatcher'
+
+
+
+原因：没有在controller里加上@Controller的注释
+```
+
+:four:springMVC视频测试**HiddenHttpMethodFilter** 操作出现的BUG
+
+```
+Type: Status Report
+
+Message: JSPs only permit GET, POST or HEAD. Jasper also permits OPTIONS
+
+Description: The method received in the request-line is known by the origin server but not supported by the target resource.
+
+解决方法加注解@ResponseBody
+
+	@ResponseBody
+	@RequestMapping(value="/testRest/{id}", method = RequestMethod.DELETE)
+	public String testRestDelete(@PathVariable("id") Integer id){
+		System.out.println("test delete:" + id);
+		return SUCCESS;
+	}
+```
 

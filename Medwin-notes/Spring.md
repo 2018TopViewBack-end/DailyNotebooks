@@ -108,12 +108,16 @@ jdbc等
 
 ​	b)**bean注入**（bean中有bean）
 
-```xml
+``` xml
 <bean id="student" class="cn.medwin.Student">
-    <property name="name" value="new student"/>
+    <property name="name" value="newStudent"/>
     <property name="addr" ref="addr"/>
     <!-- 引入studetn的属性addr类 -->
 </bean>
+
+<!-- 通过p命名空间为属性值，更简洁。需先导入p命名空间 -->
+<bean id="student" class="..." p:name="newStudent" p:addr-ref="addr"></bean>
+<bean id="addr" class="..." p:country="China" p:province="Guangdong"></bean>
 ```
 
 ​	c)**数组注入**
@@ -178,7 +182,13 @@ jdbc等
 
 ​	g)**c注入** : 构造方法注入。要求有对应参数的构造方法
 
- ... 
+### 泛型依赖注入（重要）
+
+![视频截图](https://github.com/Medw1nnn/repo-pics/blob/master/%E6%B3%9B%E5%9E%8B%E4%BE%9D%E8%B5%96.png?raw=true)
+
+若注入泛型父类，泛型子类会被自动注入 
+
+... 
 
 ## bean的作用域
 
@@ -204,6 +214,32 @@ scope：
 
 
 可在每个bean中配也可在文件头加上:default-autowire="byName"
+
+## 抽象bean和bean的继承、依赖
+
+bean可定义为abstract=“true“，此时不用指定class，且该bean不会被实例化。其他bean可继承该bean的属性，只需定义parent=”...“。
+
+子bean可以自己定义属性
+
+### bean依赖
+
+depends-on设定bean前置依赖的bean
+
+## SpEL：spring表达式语言
+
+为bean属性动态赋值提供了便利
+
+#### 表达：
+
+ # { }
+
+#### 可以实现：
+
+- 通过bean的id对bean进行引用
+- 调用方法以及引用对象中的属性 (引用其他bean的某个属性)
+- 计算表达式的值。可使用三目运算符等
+- 正则表达式的匹配
+- 调用静态方法或静态属性，如#{ T(java.lang.math).PI }
 
 ##  代理
 
@@ -301,15 +337,27 @@ public class ProxyInovationHandler implements InvocationHandler{
 
 **关注点：** 关注的业务，如日志、安全、缓存、事务、异常等
 
-**切面 aspect：**一个关注点的模块化（封装业务类）
+**切面 aspect：**一个关注点的模块化（封装业务类），即要加的功能的前置后置合起来
 
-**连接点 joinpoint：**程序执行中某个特定的点。一个连接点总是表示一个方法的执行（连接公共业务和领域业务）
+**连接点 joinpoint：**程序执行中某个特定的点。一个连接点总是表示一个方法的执行或执行后（连接公共业务和领域业务）
 
 **通知 advice：**在切面的某个特定的连接点上执行的动作。（目标方法周围的操作）
 
+目标：被通知的对象，即本来的业务
+
+切点：aop通过连接点定位到特定的连接点（抽象）。类比：连接点相当于数据库中的数据，切点相当于查询条件，他们不是一对一关系
+
 - 注意其中的ThrowsAdvice异常通知接口
 
-**织入：**...
+**织入：**生成代理对象的过程
+
+### 通知的分类
+
+- 前置通知
+- 后置通知
+- 环绕通知
+- 异常通知
+- 返回通知
 
 ### 使用spring实现AOP的三种方式
 
@@ -388,11 +436,11 @@ public class ProxyInovationHandler implements InvocationHandler{
    <!-- Log类中有before和after方法 -->
    ```
 
-3. #### 通过注解实现--autoproxy
+3. #### 通过注解实现--autoproxy，aspectJ类库。需导入spring-aspect包（最常用）
 
    ```java
    
-   // 在第二种方法的基础上，在Log类加上@Aspect注解，在方法上加上@Before、@after等 
+   // 在第二种方法的基础上，在Log类（切面）加上@Aspect注解，在方法上加上@Before、@after等 
    
    @Aspect
    public class Log {
@@ -432,7 +480,6 @@ public class ProxyInovationHandler implements InvocationHandler{
    <aop:aspectj-autoproxy/>
    ```
 
-   
 
 ## Spring整合MyBatis
 
@@ -541,14 +588,149 @@ public class ProxyInovationHandler implements InvocationHandler{
 
   5. ......
 
-     
+     ------
 
-  ## 使用注解开发
+      
 
-   
+## 使用注解开发
 
-   
+- **@Service**用于标注业务层组件、
 
-   
+  **@Controller**用于标注控制层组件（如struts中的action）、
 
- 
+  **@Repository**用于标注数据访问组件，即DAO组件。
+
+  而**@Component**泛指组件，当组件不好归类的时候，我们可以使用这个注解进行标注。 这四种注解仅仅是角色不同，但实质都一样。
+
+  被注解的java类当做Bean实例，Bean实例的名称默认是Bean类的首字母小写，其他部分不变。@Service也可以自定义Bean名称，但是必须是唯一的 
+
+  注，通常xxServiceImpl会使用value改名为xxService
+
+- **@order**--指定切面优先级（有多个同位置通知时使用），值越小优先级越高
+
+  ------
+
+  
+
+  ### @Component vs @Configuration and @Bean：
+
+  @Component可以替代 @Configuration注解 ，但还是有区别的
+
+- **@Bean**注解主要用于方法上，有点类似于工厂方法，当使用了@Bean注解，我们可以连续使用多种定义bean时用到的注解，譬如用@Qualifier注解定义工厂方法的名称，用@Scope注解定义该bean的作用域范围，譬如是singleton还是prototype等。 
+
+- **@Configuration**注
+
+  该类等价 与XML中配置beans，相当于Ioc容器，它的某个方法头上如果注册了@Bean，就会作为这个Spring容器中的Bean，与xml中配置的bean意思一样。
+
+  @Configuration注解的类必需使用<context:component-scanbase-package="XXX"/>扫描
+
+  定义一个MainConfig，用@Configuration注解，那MainConfig相当于xml里的beans,里面用@Bean注解的和xml里定义的bean等价，用<context:component-scanbase-package=”XXX”/>扫描该类，最终我们可以在程序里用@AutoWired或@Resource注解取得用@Bean注解的bean，和用xml先配置bean然后在程序里自动注入一样。目的是减少xml里配置。
+
+  Spring 中新的 Java 配置支持的核心就是@Configuration 注解的类。这些类主要包括 @Bean 注解的方法来为 Spring 的 IoC 容器管理的对象定义实例，配置和初始化逻辑。 
+
+  ```java
+  @Configuration
+  public class AppConfig {
+      @Bean
+      public MyService myService() {
+          return new MyServiceImpl();
+      }
+  }
+  ```
+
+  即
+
+  ```xml
+  <beans>
+      <bean id="myService" class="com.acme.services.MyServiceImpl"/>
+  </beans>
+  ```
+
+  
+
+-  **@Value**注解
+
+  为了简化从properties里取配置，可以使用@Value, 可以properties文件中的配置值。
+
+  ------
+
+  
+
+- ### 装配bean时常用的注解 
+
+  #### @Autowired:
+
+  可用于**为类的属性、构造器、方法进行注值**  ,和@resource一样均可标注在字段或属性的setter方法上 
+
+  Autowired默认先按**byType**，如果发现找到多个bean，则，又按照byName方式比对（即如果有改名的话就匹配名字），如果还有多个，则报出异常。
+
+  可以手动指定按byName方式注入，**使用@Qualifier**。或用@component("name")
+
+  //通过此注解完成从spring配置文件中 查找满足Fruit的bean,然后按//@Qualifier指定pean
+
+  如果要允许null 值（就是说该bean可以没有@component注解），可以设置它的required属性为false，如：@Autowired(required=false)  
+
+  #### @Resource:
+
+  默认按 **byName**自动注入,如果找不到再按byType找bean,如果还是找不到则抛异常，无论按byName还是byType如果找到多个，则抛异常。
+
+  可以手动指定bean,它有2个属性分别是name和type，**使用name属性，则使用byName的自动注入，而使用type属性时则使用byType自动注入**。
+
+  @Resource(name=”bean名字”)
+
+  或
+
+  @Resource(type=”bean的class”)
+
+  这个注解是属于J2EE的，减少了与spring的耦合。
+
+  #### **@PostConstruct 和 @PreDestory** 
+
+  [实现初始化和销毁bean之前进行的操作](http://blog.csdn.net/topwqp/article/details/8681497)，只能有一个方法可以用此注释进行注释，方法不能有参数，返回值必需是void,方法需要是非静态的。
+
+   @PostConstruct：在构造方法和init方法（如果有的话）之间得到调用，且只会执行一次。
+
+  @PreDestory：注解的方法在destory()方法调用后得到执行。
+
+  #### 注意点：
+
+  - **在spring容器中测试需要导入spring-test包**，并使用
+
+    ```java
+    @RunWith(SpringJUnit4ClassRunner.class)
+    @ContextConfiguration(value = {"classpath:bean.xml"})
+    ```
+
+    此时**不再需要**：
+
+    - 手工加载 Spring 的配置文件
+    - 手工清理数据库的每次变更
+    - 手工获取 application context 然后获取 bean 实例
+
+  #### 使用@Resource也要注意添加配置文件到Spring，如果没有配置
+
+  ```xml
+  <context:component-scan> 
+  <!--<context:component-scan>的使用，是默认激活<context:annotation-config>功能-->
+  <!-- 可用resource-pattern指定过滤掉的类，也可用<context:include-filter>和<context:exclude-filter>指定排除或包含哪些指定表达式的组件（需配合use-default-filter属性） -->
+  ```
+
+  则需要配置：
+
+  ```xml
+  <context:annotation-config/>
+  ```
+
+  ------
+
+  
+
+- @Primary
+
+  自动装配时当出现多个Bean候选者时，被注解为@Primary的Bean将作为首选者，否则将抛出异常
+
+- @Singleton
+
+  只要在类上加上这个注解，就可以实现一个单例类，不需要自己手动编写单例实现类
+
+- @Valid是对javabean的校验，如果想对使用@RequestParam方式接收参数方式校验使用@Validated 
