@@ -1,4 +1,5 @@
 # SpringMVC学习笔记
+[TOC]
 
 ## 1、SpringMVC基础入门，创建一个HelloWorld程序
 
@@ -470,6 +471,56 @@ public class jsonController {
 }
 ```
 
+#### 13.3、实现原理
+
+HttpMessageConverter<T>是Spring3.0新添加的一个接口，负责将请求信息转换为一个对象（类型为T），将对象（类型为T）输出为响应信息。
+
+HttpMessageConverter<T>接口定义的方法
+
+```java
+public interface HttpMessageConverter<T> {
+	/**
+     * 指定转换器可以读取的对象类型，即转换器是否可将请求信息转换为clazz类型的对
+     * 象，同时指定支持 MIME 类型(text/html,applaiction/json等)
+     */
+	boolean canRead(Class<?> clazz, MediaType mediaType);
+
+	/**
+	 * 指定转换器是否可将clazz类型的对象写到响应流中，响应流支持的媒体类型
+	 * 在MediaType中定义。
+	 */
+	boolean canWrite(Class<?> clazz, MediaType mediaType);
+
+	/**
+	 * 该转换器支持的媒体–类型
+	 */
+	List<MediaType> getSupportedMediaTypes();
+
+	/**
+	 * 将请求信息流转换为 T 类型的对象。
+	 */
+	T read(Class<? extends T> clazz, HttpInputMessage inputMessage)
+			throws IOException, HttpMessageNotReadableException;
+
+	/**
+	 * 将T类型的对象写到响应流中，同时指定相应的媒体类型为contentType。
+	 */
+	void write(T t, MediaType contentType, HttpOutputMessage outputMessage)
+			throws IOException, HttpMessageNotWritableException;
+
+}
+
+```
+
+![](C:\Users\Pan梓涵\Desktop\JavaStudy\image\spring\Snipaste_2018-07-27_14-48-24.png)
+
+ 	使用 HttpMessageConverter<T> 将请求信息转化并绑定到处理方法的入参中或将响应结果转为对应类型的响应信息，Spring 提供了两种途径：
+
+* 使用 @RequestBody / @ResponseBody 对处理方法进行标注
+* 使用 HttpEntity<T> / ResponseEntity<T> 作为处理方法的入参或返回值
+
+当控制器处理方法使用到 @RequestBody/@ResponseBody或HttpEntity<T>/ResponseEntity<T> 时, Spring 首先根据请求头或响应头的Accept属性选择匹配的HttpMessageConverter, 进而根据参数类型或泛型类型的过滤得到匹配的 HttpMessageConverter, 若找不到可用的HttpMessageConverter将报错。
+
 ## 14、异常的处理
 
 #### 14.1、处理局部异常（Controller内）
@@ -528,7 +579,14 @@ error是出错页面
 
 ```java
 public class MyInterceptor implements HandlerInterceptor {
-
+	
+     /**
+     * 该方法在目标方法之前被调用
+     * 若返回值为true，则继续调用后续的拦截器和目标方法
+     * 若返回值为false，则不会再调用后续的拦截器和目标方法
+     *
+     * 可以考虑做权限，日志，事务等。
+     */
     @Override
     public void afterCompletion(HttpServletRequest arg0,
             HttpServletResponse arg1, Object arg2, Exception arg3)
@@ -536,12 +594,19 @@ public class MyInterceptor implements HandlerInterceptor {
         System.out.println("afterCompletion");
     }
 
+    /**
+     * 调用目标方法之后，但在渲染视图之前
+     * 可以对请求域中的属性或视图做出修改
+     */
     @Override
     public void postHandle(HttpServletRequest arg0, HttpServletResponse arg1,
             Object arg2, ModelAndView arg3) throws Exception {
         System.out.println("postHandle");
     }
-
+	
+    /**
+     * 渲染视图之后被调用，释放资源
+     */
     @Override
     public boolean preHandle(HttpServletRequest arg0, HttpServletResponse arg1,
             Object arg2) throws Exception {
@@ -901,3 +966,6 @@ public class UserController {
 ## 写在最后
 
 转载自[史上最全最强SpringMVC详细示例实战教程](https://www.cnblogs.com/sunniest/p/4555801.html)
+
+
+
