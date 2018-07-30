@@ -181,3 +181,145 @@ xxx-servlet.xml配置：
 
 ```
 
+:one::three:制作自定义视图：
+
+```
+	<!-- 配置视图  BeanNameViewResolver 解析器: 使用视图的名字来解析视图 -->
+	<!-- 通过 order 属性来定义视图解析器的优先级, order 值越小优先级越高 -->
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+		<property name="order" value="100"></property>
+	</bean>
+```
+
+
+
+```
+@Component
+public class HelloView implements View {
+
+   @Override
+   public String getContentType() {
+      return "text/html";
+   }
+
+   @Override
+   public void render(Map<String, ?> map, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+      httpServletResponse.setHeader("Content-type", "text/html;charset=UTF-8");
+      httpServletResponse.setCharacterEncoding("UTF-8");
+      httpServletResponse.getWriter().print("hello view：" + new Date());
+   }
+}
+```
+
+:one::four:
+
+@Autowired 注释，它可以对类成员变量、方法及构造函数进行标注，完成自动装配的工作。 过 @Autowired的使用标注到成员变量时不需要有set方法，请注意@Autowired 默认按类型匹配的 
+
+:one::five:
+
+```
+	@InitBinder
+	public void initBinder(WebDataBinder webDataBinder) {
+		webDataBinder.setDisallowedFields("lastName");
+	}
+	lastName将不会存入数据库
+```
+
+:one::six:
+
+```
+数据校验
+1.注解形式
+	@DateTimeFormat(pattern="yyyy-MM-dd")
+	private Date birth;
+
+	@NumberFormat(pattern="#,###,###.#")
+	private Double salary;
+```
+
+1. 数据类型转换
+2. 数据类型格式化
+3. 数据校验. 
+
+		1). 如何校验 ? 注解 ?
+		①. 使用 JSR 303 验证标准
+		②. 加入 hibernate validator 验证框架的 jar 包
+		③. 在 SpringMVC 配置文件中添加 <mvc:annotation-driven />
+		④. 需要在 bean 的属性上添加对应的注解
+		⑤. 在目标方法 bean 类型的前面添加 @Valid 注解
+	2). 验证出错转向到哪一个页面 ?
+	注意: 需校验的 Bean 对象和其绑定结果对象或错误对象时成对出现的，它们之间不允许声明其他的入参
+	3). 错误消息 ? 如何显示, 如何把错误消息进行国际化
+
+1️⃣:seven:
+
+文件上传：
+
+```
+pom.xml配置：
+<!--文件上传-->
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
+        </dependency>
+
+springmvc.xml配置：
+<!--配置MultipartResolver-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="maxUploadSize" value="1024000"/>
+    </bean>
+
+servlet配置：
+@RequestMapping("/testFileUpload")
+	public String testFileUpload(@RequestParam("desc") String desc,
+								 @RequestParam("file") MultipartFile file) throws IOException {
+		System.out.println("desc: " + desc);
+		System.out.println("OriginalFilename: " + file.getOriginalFilename());
+		System.out.println("InputStream: " + file.getInputStream());
+		return "success";
+	}
+```
+
+:one::eight:
+
+* 需要进行 Spring 整合 SpringMVC 吗 ?
+* 还是否需要再加入 Spring 的 IOC 容器 ?
+* 是否需要再 web.xml 文件中配置启动 Spring IOC 容器的 ContextLoaderListener ?
+
+   1. 需要: 通常情况下, 类似于数据源, 事务, 整合其他框架都是放在 Spring 的配置文件中(而不是放在 SpringMVC 的配置文件中).
+       实际上放入 Spring 配置文件对应的 IOC 容器中的还有 Service 和 Dao. 
+   2. 不需要: 都放在 SpringMVC 的配置文件中. 也可以分多个 Spring 的配置文件, 然后使用 import 节点导入其他的配置文件
+* 问题: 若 Spring 的 IOC 容器和 SpringMVC 的 IOC 容器扫描的包有重合的部分, 就会导致有的 bean 会被创建 2 次.
+
+			解决:
+		1. 使 Spring 的 IOC 容器扫描的包和 SpringMVC 的 IOC 容器扫描的包没有重合的部分. 
+		2. 使用 exclude-filter 和 include-filter 子节点来规定只能扫描的注解
+	
+
+```
+springmvc.xml
+<context:component-scan base-package="com.atguigu.springmvc" use-default-filters="false">
+		<context:include-filter type="annotation" 
+			expression="org.springframework.stereotype.Controller"/>
+		<context:include-filter type="annotation" 
+			expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+</context:component-scan>
+
+beans.xml
+<context:component-scan base-package="com.atguigu.springmvc">
+		<context:exclude-filter type="annotation" 
+			expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" 
+			expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+```
+
