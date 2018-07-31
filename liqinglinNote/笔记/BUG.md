@@ -63,3 +63,56 @@ Description: The method received in the request-line is known by the origin serv
 	}
 ```
 
+:five:springMVC视频测试国际化出现乱码 ==`???i18n.username???`== ，解决方法：在setting中把编码设置为UTF-8。
+
+浏览器的语言要移到顶部才能让语言成功切换。
+
+:six:springMVC自定义视图，没有在xxx-servlet.xml配置文件配自动扫描：
+
+```
+<context:component-scan base-package="com.test.views">< /context:component-scan> 
+```
+
+导致404错误。
+
+:seven:
+
+```
+使用@Autowired要在springmvc.xml加包扫描才能正常使用。
+```
+
+:eight:
+
+```
+405
+Type Status Report
+
+Message Request method 'POST' not supported
+
+Description The method received in the request-line is known by the origin server but not supported by the target resource.
+
+原因： <url-pattern>/</url-pattern>没有加星号
+<filter>
+    <filter-name>HiddenHttpMethodFilter</filter-name>
+    <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+  </filter>
+  
+  <filter-mapping>
+    <filter-name>HiddenHttpMethodFilter</filter-name>
+    <url-pattern>/</url-pattern>
+  </filter-mapping>
+  
+  
+```
+
+:nine:
+
+```
+springmvc数据格式化生日日期格式应该导入
+import java.sql.Date;
+
+Type ：Status Report
+
+Description : The server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing).
+```
+
