@@ -1,0 +1,7 @@
+<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+<!--依赖的数据库驱动类-->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.38</version>
+</dependency>

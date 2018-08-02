@@ -1,0 +1,7 @@
+        <!-- https://mvnrepository.com/artifact/commons-dbcp/commons-dbcp -->
+ <!--依赖的连接池类-->
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.4</version>
+        </dependency>
