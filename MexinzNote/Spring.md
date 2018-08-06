@@ -28,6 +28,7 @@
    		name可以设置多个别名 分隔符可以 是 空格 逗号 分号
    		class是bean的全限定名=包名+类名
    		如果不配置 id,和name 那么可以根据applicationContext.getBean(Class) 获取对象
+             									（只有一个这类对象的情况）
    -->
    <import resource="config/spring/entity.xml"/>
     <!-- bean就是java对象，由spring来创建和管理，scope取决了该对象是单例还是每用一次就创建一个新的或是别的方式 -->  
@@ -39,7 +40,7 @@
 </beans>
 ```
 
--  此时对应的测试类代码
+- 此时对应的测试类代码
 
   ```java
   //解析beans.xml文件，生成管理相应的bean对象
@@ -58,7 +59,14 @@
 
 - **依赖注入**：POJO类**依赖**于它本身的属性，而现在它的属性，通过POJO类本身的set方法，由spring进行赋值，因此又被称为依赖注入
 
-## 使用IOC创建对象的3种方式
+## 最底层的BeanFactory接口
+
+- getBean() 获取配置给Spring IOC容器的Bean 参数类型是字符串/Class类型
+- isSingleton() 判断是否单例，是则返回true，默认为创建单例，即返回true
+- isPrototype() 和上面的相反，返回true则意味着当你从IOC容器中获取bean就生成一个新的实例
+- getAliases() 获取别名的方法，参数name，返回String[ ]
+
+## 使用IOC创建对象的3种方式（依赖注入）
 
 - 通过无参的构造方法来创建
 
@@ -176,6 +184,8 @@
   ```
 
 ## 依赖注入 Dependency Injection
+
+### xml注入
 
 1. - 依赖：指bean对象依赖于容器，bean对象的依赖资源
    - 注入：指bean对象依赖的资源由容器来设置和装配
@@ -298,15 +308,86 @@
          <bean id="u1" class="xxx.xx.xxx.User" c:name="Taylor" c:age="26"/>
          ```
 
+### 注解注入
+
+1. @Component("xxx") 标注在类上，相当于xml中bean的id
+
+2. @Value("xxx") 标注在成员变量上，为值的注入
+
+3. @ComponentScan 标注在需要使用到@Component标注的类的类上，默认是扫描当前包的路径
+
+   它还有两个配置项，一个是basePackages（一个Java包数组，根据其配置扫描对应的包和子包）,一个是basePackageClasses（配置多个类，根据这些类所在的包，为包和子包扫描装配对应位置的bean）
+
+- 但是这样的类Spring IoC不知道要去哪里扫描对象，需要另外一个Config类告诉它
+
+  ```java
+  package com.xxx.xxx.....//这个包名必须和相应的POJO类保持一致，或者使用下面注解的配置项告诉编译器要扫描的包名，不建议使用包数组，因为编译器没有任何提示
+      
+  @ComponentScan 
+  //这个注解代表扫描，默认是当前包的路径，POJO的包名和它保持一致才能扫描，否则是没有的
+  public class PojoConfig{
+      //这个类很简单，几乎没有逻辑
+  }
+  ```
+
+- 测试类
+
+  ```java
+  public static void main(String[] agrs){
+      ApplicationContext context = new AnnotationConfigApplicationContext(PojoConfig.class);
+      Role role = context.getBean(Role.class);
+  }
+  ```
+
+- @Autowired自动装配 一般用于对象引用，也允许用来配置方法。可以用setter和构造方法上
+
+- @Primary 当成员变量有一个是接口时，而它又对应着多个实现类，这个时候使用Autowired自动装配会失败，因为Spring IOC不知道把哪个对象装配进来（它是按类型装配对象的），因此，在该接口的实现类上使用@Primary注解，表示**优先使用该类注入**
+
+- @Qualifier 在上述所说的接口成员变量上加上这个注解，使用方法为@Qualifier("xxx")，xxx为该实现类的别名（即该实现类的@Component括号中的名字），这时IoC容器会使用名称的方式注入而不是类型，从而知道将哪一个实现类装配进来
+
+- @AutoWired和@Qualifier同样可以用在构造方法的参数上（通常是对象引用参数）
+
+- @Bean 注解到方法上（不能注解在类上），并且将方法返回的对象作为Spring的Bean（因为在引用第三方的jar包时，往往没有这些包的源码，无法为这些包的类加入@Compenent注解，让他们变成开发环境的Bean），它也可以使用@AutoWired和@Qualifier装配到别的Bean中。
+
+  @Bean 还有四个配置项：
+
+  1. name：一个字符串数组，允许配置多个BeanName
+  2. autowire：标志是否一个引用的Bean对象，默认值是Autowire.NO
+  3. initMethod ：自定义初始化方法（可以用注解实现生命周期中的一些自定义的初始化方法）
+  4. destroyMethod：自定义销毁方法（可以用注解实现生命周期中的一些自定义的销毁方法）
+
+- @ImportResource({"classPath:xxxxx.xml"，...}) 配置的内容是一个数组，也就是可以引入多个xml文件，通过这种方法**在注解体系中引入xml文件中配置的bean**
+
+- @Import({xxx.class,xxx.class.....}) 导入多个配置类（有时候所有配置都放一个类里会混乱）
+
+- @Configuration标注在类上，相当于把该类作为spring的xml配置文件中的`<beans>`，作用为：配置spring容器(应用上下文) 
+
+- @Profile（“xxx”） 可以定义两个不同的数据库连接池，xxx以该数据库的用途来取名，如dev表示用于开发，test表示用于测试，下面是以xml文件的配置方法
+
+  ```xml
+  <beans profile="test"> 	<!--用于开发则profile="dev"-->
+  	<bean id="dataSource" class="xxx..">
+       	<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+          	....
+      </bean>
+  </beans>
+  ```
+
+  在测试类上使用@ActiveProfile("xxx") 用于指定加载哪一个Profile
+
 ## bean作用域
 
 - 每个**<bean>**标签中都有一个scope属性，这就是bean的作用域，分为以下6种
   1. singleton：**单例**，也是默认的作用域。和正常的单例不太一样，它是通过一个计数器去记录的。整个容器中只有一个对象实例，每次访问的都是同一个对象
-  2. prototype：**原型**。每次获取bean都产生一个新的对象（在审核struts2和spring时，需要将action设为scope="prototype"）
-  3. request：**请求**。每次请求时创建一个新的对象
-  4. session：**会话**。在会话的范围内时是一个对象（指的是http那个session，不是mybatis那个）
-  5. global session：只在portlet下有用，表示是application
+  2. prototype：**原型**。每次获取bean都产生一个新的对象（在整合struts2和spring时，需要将action设为scope="prototype"）
+  3. request：**请求**。每次请求时创建一个新的对象 在web应用中使用
+  4. session：**会话**。在一个会话中spring只创建一个实例（指的是http那个session，不是mybatis那个）在web应用中使用 
+  5. globalSession：只在portlet下有用，表示是application 只适用于web应用 
   6. application：在整个应用范围中只有一个对象
+
+- 使用@Scope(ConfigurableBeanFactory.xxx) 配置在类上，表示创建该类实例时的作用域--------单例/原型
+
+  @Scope(value = WebApplicationContext.xxx, proxyMode = ScopedProxyMode.INTERFACES) -------请求/会话
 
 ## bean自动装配
 
@@ -667,48 +748,62 @@
 
   
 
-  #### 通过注解实现
+#### 通过注解实现
 
-  - 示例：Log.java 公共的日志业务
+- 示例：Log.java 公共的日志业务
 
-  ```java
-  //aspect表示它是一个切面
-  @Aspect
-  public class Log {
-      //使用注解也要告诉它切入点，即括号里面的位置
-      @Before("execution(* com.practice.aop3.*.*(..))")
-      public void before() {
-          System.out.println("-----方法执行前-----");
-      }
-  
-      @After("execution(* com.practice.aop3.*.*(..))")
-      public void after() {
-          System.out.println("-----方法执行后-----");
-      }
-  
-      //Around注解表示在这里执行目标方法并写一些环绕目标方法的操作
-      @Around("execution(* com.practice.aop3.*.*(..))")
-      public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-          //在before前执行
-          System.out.println("环绕前");
-          System.out.println("方法签名为："+ joinPoint.getSignature());
-          //执行目标方法
-          Object o = joinPoint.proceed();
-          //在after前执行
-          System.out.println("环绕后");
-  
-          return o;
-      }
-  }
-  ```
+```java
+//aspect表示它是一个切面
+//当有多个切面时，使用@Order(number),表示切面的切入顺序，先进后出
+@Aspect
+public class Log {
+    
+    //如果不想写很多次execution这个正则表达式，可以定义一个空方法，上面用@Pointcut("execution(...)") 后面的@Before等等就可以直接@Before("空方法名()")
+    
+    //使用注解也要告诉它切入点，即括号里面的位置
+    //如果需要给通知传参，则在下面的excution这一串字符串后+"&&args(name1,name2,...)",然后在通知的方法参数中对应声明 类型+参数名，参数名和name1，name2对应
+    @Before("execution(* com.practice.aop3.*.*(..))")
+    public void before() {
+        System.out.println("-----方法执行前-----");
+    }
 
-  - bean.xml配置文件
+    @After("execution(* com.practice.aop3.*.*(..))")
+    public void after() {
+        System.out.println("-----方法执行后-----");
+    }
 
-  ```xml
-  <bean id="userService" class="com.practice.aop3.UserServiceImpl"/>
-  <bean id="log" class="com.practice.aop3.Log"/>
-  <aop:aspectj-autoproxy/>
-  ```
+    //Around注解表示在这里执行目标方法并写一些环绕目标方法的操作
+    @Around("execution(* com.practice.aop3.*.*(..))")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        //在before前执行
+        System.out.println("环绕前");
+        System.out.println("方法签名为："+ joinPoint.getSignature());
+        //执行目标方法
+        Object o = joinPoint.proceed();
+        //在after前执行
+        System.out.println("环绕后");
+
+        return o;
+    }
+    
+}
+```
+
+- bean.xml配置文件
+
+```xml
+<!-- 要加上aop命名空间-->
+<bean id="userService" class="com.practice.aop3.UserServiceImpl"/>
+<bean id="log" class="com.practice.aop3.Log"/>
+<aop:aspectj-autoproxy/>
+<!--表示开启AOP代理自动配置-->
+
+<!--如果使用注解配置，则在类上@EnableAspectJAutoProxy-->
+```
+
+![image](E:\2018summer copy\MexinzNote\微信图片_20180726215240.png)
+
+![image](E:\2018summer copy\MexinzNote\微信截图_20180727105633.png)
 
 ### Spring aop的理解
 
@@ -940,7 +1035,11 @@
   <!--声明式事务配置 结束-->
   ```
 
+- 配置注解驱动 : 在上述配置文件 加入如下配置就可以使用＠Transactional 配置事务了
+
+  ```xml
+  < tx:annotation-driven transaction-manager= ” transactionManager” />
+  ```
+
   
-
-
 

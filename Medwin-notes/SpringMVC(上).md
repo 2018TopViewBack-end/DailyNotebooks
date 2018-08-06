@@ -2,6 +2,8 @@
 
 ## 概述
 
+![SpringMVC.png](https://github.com/Medw1nnn/repo-pics/blob/master/SpringMVC.png?raw=true) 
+
 ## 基本步骤
 
 1. 新建project，步骤为：普通maven-添加web模块-spring依赖
@@ -373,7 +375,7 @@ return "redirect:/index.jsp";
 
 ----
 
-## REATful 风格SpringMVC 增删查改
+## RESTful 风格SpringMVC 增删查改
 
 ### 使用spring的表单标签 
 
@@ -534,7 +536,7 @@ handler：
 ```java
 @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date birth;
-
+					
 @NumberFormat(pattern="#,###,###.#")
     private Float salary;
 ```
@@ -565,3 +567,15 @@ jsr303是java的一个数据校验标准框架，需导入hibernate validator验
 
 ----
 
+## HttpMessageConverter接口--消息转换器
+
+- **@RequestBody和@ResponseBody**两个注解，分别完成请求报文(本质上是字符串)到对象和对象到响应报文的转换，底层这种灵活的消息转换机制，就是Spring3.x中新引入的HttpMessageConverter即**消息转换器**机制。
+- springmvc可以接收不同的消息形式，也可以将**不同的消息形式**响应回去(最常见的是json);这些消息所蕴含的“有效信息”是一致的，那么各种不同的消息转换器，都会生成同样的转换结果。至于各种消息间解析细节的不同，就被屏蔽在不同的HttpMessageConverter实现类中了。 
+
+![æ¶æ¯è½¬æ¢å¾](http://static.oschina.net/uploads/space/2013/1026/091627_zgNV_118997.png) 
+
+- **RequestResponseBodyMethodProcessor**这个类同时实现了HandlerMethodArgumentResolver和HandlerMethodReturnValueHandler两个接口。前者是**将请求报文绑定到处理方法形参**的策略接口，后者则是**对处理方法返回值进行处理**的策略接口。，所以它同时充当了方法参数解析和返回值处理两种角色 
+
+  两个接口的实现，分别是以是否有@RequestBody和@ResponseBody为条件，然后分别调用HttpMessageConverter来进行消息的读写 
+
+- 在SpringMVC的设计者眼中，一次请求报文和一次响应报文，分别被抽象为一个请求消息**HttpInputMessage**和一个响应消息**HttpOutputMessage** 
