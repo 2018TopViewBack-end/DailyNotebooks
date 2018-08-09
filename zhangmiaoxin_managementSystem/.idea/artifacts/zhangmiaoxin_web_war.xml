@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="war" name="zhangmiaoxin-web:war">
-    <output-path>$PROJECT_DIR$/zhangmiaoxin-web/target</output-path>
-    <root id="archive" name="zhangmiaoxin-web.war">
-      <element id="artifact" artifact-name="zhangmiaoxin-web:war exploded" />
-    </root>
-  </artifact>
-</component>
