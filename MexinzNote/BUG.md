@@ -16,3 +16,12 @@
 ## 2018.7.19
 
 - 由于mybatis的一级缓存，当在select语句中嵌套foreach循环时，相同的查询条件只会查询一次，导致查询到的结果集变少（参数的list中有重复的）
+
+## 2018.7.29
+
+- 自定义视图的时候，把试图类（实现了View接口），放在了view包，然后 dispatcher-servlet.xml 没有加多一个包扫描，导致默认跳转到 jsp 页面404
+
+## 2018.8.1
+
+- 在Spring + JUnit4进行测试时遇到：java.lang.ExceptionInInitializerError。原因是spring支持的JUnit测试版本最低要求是4.12，而我的是4.11
+
