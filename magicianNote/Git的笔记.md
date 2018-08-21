@@ -35,7 +35,7 @@
 >　　**`git push –u(第一次要用-u 以后不需要) origin master `**把当前master分支推送到远程库
 >　　**`git clone https://github.com/tugenhua0707/testgit `** 从远程库中克隆
 >       **`git clone https://github.com/tugenhua0707/testgit--depth=1 `** 浅复制，只下载最近一次的版本
->​      **`git clone -b <branch name> [remote repository address] `** 克隆某一个特定的远程分支
+>​       **`git clone -b <branch name> [remote repository address] `** 克隆某一个特定的远程分支
 >　　**`git fetch --unshallow`** 获取完整历史信息
 >　　**`git checkout –b dev`**  创建dev分支 并切换到dev分支上
 >　　**`git branch `** 查看当前所有的分支

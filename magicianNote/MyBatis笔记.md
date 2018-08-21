@@ -302,3 +302,53 @@
 
 * 
 
+### 使用Mapper接口编程的规范
+
+* Mapper 接口的名称和对应的Mapper.xml映射文件的名称一致
+* Mapper.xml 文件中的namespace与Mapper接口的路径相同（即接口文件和映射文件需要放在同一个包中）
+* Mapper接口中的方法名和Mapper.xml定义的每个执行语句的id相同
+* Mapper接口中的方法的输入参数类型要和Mapper.xml中定义的每个sql的parameterType的类型相同
+* Mapper接口方法的输出参数类型要和Mapper.xml中定义的每个sql的resultType的类型相同
+
+
+
+### MyBatis分页插件
+
+* ```xml
+  <!--1.配置maven-->
+  <dependency>
+      <groupId>com.github.pagehelper</groupId>
+      <artifactId>pagehelper</artifactId>
+      <version>最新版本</version>
+  </dependency>
+  ```
+
+* ```xml
+  <!--2.在 MyBatis 配置 xml 中配置拦截器插件-->
+  <!-- 
+      plugins在配置文件中的位置必须符合要求，否则会报错，顺序如下:
+      properties?, settings?, 
+      typeAliases?, typeHandlers?, 
+      objectFactory?,objectWrapperFactory?, 
+      plugins?, 
+      environments?, databaseIdProvider?, mappers?
+  -->
+  <plugins>
+      <!-- com.github.pagehelper为PageHelper类所在包名 -->
+      <plugin interceptor="com.github.pagehelper.PageInterceptor">
+          <!-- 使用下面的方式配置参数，后面会有所有的参数介绍 -->
+          <property name="param1" value="value1"/>
+  	</plugin>
+  </plugins>
+  ```
+
+* ```java
+  //3.使用方法
+  //第一种，RowBounds方式的调用
+  List<Country> list = sqlSession.selectList("x.y.selectIf", null, new RowBounds(0, 10));
+  //其中，如果需要将全部数据传出，则为第二个参数改为new RowBounds()
+  //其中，0代表从第0条开始，总共10个
+  ```
+
+* 
+

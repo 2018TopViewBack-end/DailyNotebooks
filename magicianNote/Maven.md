@@ -288,15 +288,15 @@
 
 ### pom属性(以下参考[慕课网视频](https://www.imooc.com/video/8645/0))
 
-* ![1531298639475](https://github.com/630231047/notebook/blob/master/1531298639475.png?raw=true)
+* ![1531298639475](https://github.com/630231047/notebook/blob/master/photos/1531298639475.png?raw=true)
 
-![1531298681189](https://github.com/630231047/notebook/blob/master/1531298681189.png?raw=true)
+![1531298681189](https://github.com/630231047/notebook/blob/master/photos/1531298681189.png?raw=true)
 
-![1531298861706](https://github.com/630231047/notebook/blob/master/1531298861706.png?raw=true)
+![1531298861706](https://github.com/630231047/notebook/blob/master/photos/1531298861706.png?raw=true)
 
-![1531298950992](E:\Program Files\notebook\1531298950992.png)
+![1531298950992](https://github.com/630231047/notebook/blob/master/photos/1531298950992.png?raw=true)
 
-![1531299003791](https://github.com/630231047/notebook/blob/master/1531299003791.png?raw=true)
+![1531299003791](https://github.com/630231047/notebook/blob/master/photos/1531299003791.png?raw=true)
 
 ```xml
 <!--将插件绑定在某个阶段-->
@@ -334,7 +334,7 @@
 ### 插件的使用方法
 
 * **`configuration`**可以用来配置参数
-* ![1531308712068](https://github.com/630231047/notebook/blob/master/1531308712068.png?raw=true)
+* ![1531308712068](https://github.com/630231047/notebook/blob/master/photos/1531308712068.png?raw=true)
 
 
 
