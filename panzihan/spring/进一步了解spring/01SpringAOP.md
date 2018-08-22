@@ -1,3 +1,5 @@
+# 
+
 # SpringAOP基础
 
 ### 1、AOP的概述
@@ -231,7 +233,7 @@ public class PerformanceHandler implements InvocationHandler {
 说明：
 
 	首先实现了InvocationHandler接口，该接口定义了一个`invoke(Object proxy, Method method, Object[] args)`方法，其中，proxy是最终生成的代理实例，一般不会用到；method是被代理目标实例的某个具体方法，通过它可以发起目标实例方法的反射调用；args是被代理实例某个方法的入参，在方法反射调用时使用。
-
+	
 	其次，在set函数提供setTarget（Object target）传入希望被代理的目标对象，在InvocationHandler接口方法invoke（）里，将实例传递给method.invoke（）方法，并调用目标实例的方法。
 
 代码清单：ForumServiceTest：创建代理实例
@@ -717,3 +719,757 @@ public class IntroduceTest {
     }
 }
 ```
+
+### 4、创建切面
+
+Spring通过org.springframework.aop.Pointcut接口描述切点，Pointcut由ClassFilter和MethodMatcher构成，它通过ClassFilter定位到某些特定的类上面，通过MethodMatcher定位到某些特定的方法上面，这样Pointcut就拥有了描述某些类的某些特定方法的能力。
+
+* ClassFilter只定义了一个方法matcher（Class clazz），其参数代表一个被检测类，该方法判别被检测的类是否匹配过滤条件。
+
+Spring支持两种方法匹配器：静态方法匹配器和动态方法匹配器。所谓静态方法匹配器，仅对方法名签名（包括方法名和入参类型和顺序）进行匹配；而动态方法匹配器会在运行期检查方法入参的值。静态匹配仅会判别一次，而动态匹配因为每次调用方法的入参都可能不一样，所以每次调用方法都必须判别，因此，动态匹配对性能的影响和电脑很大。一般情况下，动态匹配不常使用。方法匹配器的类型由isRuntime（）方法的返回值决定，返回false表示是静态方法匹配器，返回true是动态方法匹配器。
+
+#### 4.1、切点类型
+
+Spring提供了6种切点：
+
+1.静态方法切点：org.springframework.aop.support.StaticMethodMatcherPointcut
+
+　　StaticMethodMatcherPointcut是静态方法切点的抽象基类，默认情况下匹配所有的类。StaticMethodMatcherPointcut有两个重要的子类：NameMethodMatcherPointcut和AbstractRegexMethodPoint。前者提供简单的字符串匹配方法签名，后者使用正则表达式匹配方法签名。
+
+2.动态方法切点：org.springframework.aop.support.DynamicMethodMatcherPointcut
+
+　　DynamicMethodMatcherPointcut是动态方法切点的抽象基类，默认情况下它匹配所有的类。DynamicMethodMatcherPointcut已过时！！使用DefaultPointcutAdvisor和DynamicMethodPointcut动态方法匹配器代替。
+
+3.注解切点
+
+4.表达式切点
+
+5.流程切点
+
+6.复合切点
+
+#### 4.2、切面类型
+
+Spring使用org.springframework.aop.Advisor接口表示切面的概念。
+
+一个切面同时包含横切代码和连接点信息。切面分为三类：一般切面、切点切面、引介切面。
+
+1. 一般切面：Advisor
+
+　　它仅包含一个Advice，Advice包含了横切代码和连接点的信息，所以Advice本身就是一个简单的切面，只不过它代表的是所有目标类的所有方法。由于这个横切面过于宽泛，所以一把不会直接使用。
+
+2. 切点切面：PointcutAdvisor
+
+　　包含Advice和Pointcut两个类。我们可以通过类、方法名以及方法方位等信息灵活定义切面的连接点，提供更具适用性的切面。
+
+3. 引介切面：IntroductionAdvisor
+
+引介切面是对应引介增强的特殊的切面，它应用于类层面之上，所以引介切点适用ClassFilter进行定义。
+
+#### 4.3、静态普通方法名匹配切面
+
+StaticMethodMatcherPointcutAdvisor代表一个静态方法匹配切面，它通过StaticMethodMatcherPointcut来定义切点，并通过类过滤和方法名来匹配所定义的切点。
+
+代码清单：Waiter
+
+```java
+package com.pzh.advisor;
+public class Waiter {
+    public void greetTo(String name) {
+        System.out.println("waiter greet to " + name + "...");
+    }
+    public void serveTo(String name) {
+        System.out.println("waiter serve to " + name + "...");
+    }
+}
+```
+
+代码清单：Seller
+
+```java
+package com.pzh.advisor;
+public class Seller {
+    public void greetTo(String name) {
+        System.out.println("seller greet to " + name + "...");
+    }
+}
+```
+
+Seller拥有一个和Waiter相同名称的方法greetTo（）。现在，我们希望通过StaticMethodMatcherPointcutAdvisor定义一个切面，在Waiter#greetTo（）方法调用前织入一个增强，即连接点为Waiter#greetTo（）方法调用前的位置。具体的切面类的实现如代码清单所示。
+
+代码清单：GreetingAdvisor
+
+```java
+package com.pzh.advisor;
+import org.springframework.aop.ClassFilter;
+import org.springframework.aop.support.StaticMethodMatcherPointcutAdvisor;
+import java.lang.reflect.Method;
+
+public class GreetingAdvisor extends StaticMethodMatcherPointcutAdvisor {
+    @Override
+    public boolean matches(Method method, Class<?> targetClass) {
+        //切点方法匹配规则：方法名为greetTo
+        return "greetTo".equals(method.getName());
+    }
+
+    @Override
+    public ClassFilter getClassFilter() {
+        //切点类匹配规则：为Waiter的类或者子类
+        return new ClassFilter() {
+            @Override
+            public boolean matches(Class<?> clazz) {
+                return Waiter.class.isAssignableFrom(clazz);
+            }
+        };
+    }
+}
+```
+
+StaticMethodMatcherPointcutAdvisor抽象类唯一需要定义的是matches（）方法。在默认情况下，该切面匹配所有的类，这里通过覆盖getClassFilter（）方法，让它仅匹配Waiter类及其子类。
+
+代码清单：GreetingBeforeAdvice 一个前置增强
+
+```java
+package com.pzh.advisor;
+import org.springframework.aop.MethodBeforeAdvice;
+import java.lang.reflect.Method;
+public class GreetingBeforeAdvice implements MethodBeforeAdvice {
+
+    @Override
+    public void before(Method method, Object[] args, Object target) throws Throwable {
+        System.out.println(target.getClass().getName() + "." + method.getName());
+        String clientName = (String) args[0];
+        System.out.println("How are you! Mr." + clientName + ".");
+    }
+}
+```
+
+代码清单：配置切面：静态方法匹配切面：
+
+```xml
+<bean id="waiterTarget" class="com.pzh.advisor.Waiter"/>
+<bean id="sellerTarget" class="com.pzh.advisor.Seller"/>
+<bean id="greetingBeforeAdvice" class="com.pzh.advisor.GreetingBeforeAdvice"/>
+<!--向切面注入一个前置增强-->
+<bean id="greetingAdvisor" class="com.pzh.advisor.GreetingAdvisor"
+      p:advice-ref="greetingBeforeAdvice"/>
+<!--通过一个父<bean>定义公共的配置信息-->
+<bean id="parent" abstract="true"
+      class="org.springframework.aop.framework.ProxyFactoryBean"
+      p:interceptorNames="greetingAdvisor"
+      p:proxyTargetClass="true"/>
+
+<bean id="waiter" parent="parent" p:target-ref="waiterTarget"/>
+<bean id="seller" parent="parent" p:target-ref="sellerTarget"/>
+```
+
+StaticMethodMatcherPointcutAdvisor除了具有advice属性外，还可以定义另外两个属性。
+
+1. ClassFilter：类匹配过滤器，在GreetingAdvisor中用编码的方式设定了classFilter。
+2. order：切面织入时的顺序，该属性用于定义Ordered接口表示的顺序。
+
+代码清单：测试代码
+
+```java
+@Test
+public void testStaticMethodMatcherPointcutAdvisor() {
+    String configPath = "com/pzh/advisor/beans.xml";
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext(configPath);
+    Waiter waiter = applicationContext.getBean("waiter", Waiter.class);
+    Seller seller = applicationContext.getBean("seller", Seller.class);
+    waiter.greetTo("John");
+    waiter.serveTo("John");
+    seller.greetTo("John");
+}
+```
+
+输出信息：
+
+```
+com.pzh.advisor.Waiter.greetTo
+How are you! Mr.John.
+waiter greet to John...
+waiter serve to John...
+seller greet to John...
+```
+
+#### 4.4、静态正则表达式匹配切面
+
+在StaticMethodMatcherPointcutAdvisor中，仅能通过方法名定义切点，这种描述方式不够灵活。假设目标类中由多个方法，且它们满足一定的命名规范，使用正则表达式进行匹配就要灵活多了。RegexpMethodPointcutAdvisor是正则表达式方法匹配的切面实现类，该类已经是功能齐备的实现类，一般情况下无需扩展该类。
+
+##### 4.4.1、具体实例
+
+```xml
+<bean id="regexpAdvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor"
+      p:advice-ref="greetingBeforeAdvice">
+    <property name="patterns">
+        <list>
+            <value>.*greet.*</value>
+        </list>
+    </property>
+</bean>
+```
+
+在其中定义了一个匹配模式串“.*greet.*”，该模式串匹配Waiter.greetTo（）方法。值得注意的是，匹配模式串匹配的是目标类方法的全限定名，即带类名的方法名。
+
+除了例子使用的patterns和advice属性外，还由另外两个属性，分别介绍如下。
+
+1. pattern：如果只有一个匹配模式串，则可以使用该属性进行配置。patterns属性用于定义多个匹配模式串，这些匹配模式串之间是“或”的关系。
+2. order：切面在织入时对应的顺序。
+
+##### 4.4.2、正则表达式语法
+
+| 符号   | 说明                                                         | 实例                                                         |
+| ------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| .      | 匹配除换行符外的所有当个字符                                 | .n匹配nay,an apple is on the tree中的an和on，但不匹配nay     |
+| *      | 匹配*前面的字符0次或n次                                      | bo*匹配A ghost booooed中的boooo或A bird warbled中的b，但不匹配Agoat g runted中的任何字符。 |
+| +      | 匹配+前面的字符1次或n次。等价于{1，}                         | a+匹配candy中的a和caaaaaaandy.中的所有a                      |
+| ^      | 表示匹配的字符必须在最前边                                   | ^A不匹配anA中的A，但匹配AnA.中最前面的A                      |
+| $      | 与^类似，匹配最末的字符                                      | t$不匹配eater中的t，但匹配eat中的t                           |
+| ？     | 匹配？前面的字符0次或1次                                     | e？le？匹配angel中的el和angle中的el                          |
+| x\|y   | 匹配x或者y                                                   | green\|red 匹配 green applie中green或者red apple中的red      |
+| [xyz]  | 一张字符列表，匹配列表中的任一字符。可以通过连字符“-”指出一个字符字符的范围 | [abc]和[a-c]一样。它们匹配brisket中的b及ache中的a和c         |
+| {n}    | 这里的n是一个正整数。匹配前面n个字符                         | a{2}不匹配candy中的a，但匹配caandy中的两个a                  |
+| {n，}  | 这里的n是一个正整数。匹配至少n个前面的字符                   | a{2，}不匹配candy中的a，但匹配caandy中的所有a和caaaaaaaandy中的所有a |
+| {n，m} | 这里的n和m都是正整数。匹配至少n个，最多m个前面的字符         | a{1，3}不匹配candy中的a，但匹配candy中的a和caandy中的前面两个a和caaaaandy中前面的3个a。注意：即使caaaaandy中有很多个a，但只匹配前面的3个a，即aaa |
+| \      | 将下一个字符标记为一个特殊的字符                             | 例如，n匹配字符n。\n匹配一个换行符。语法中的特殊字符需要通过转义符表示， |
+
+| 转义字符                                                     |
+| ------------------------------------------------------------ |
+| \d 匹配一个数字字符。等价于`[0-9]`                           |
+| \D 匹配一个非数字字符。等价于`[^0-9]`                        |
+| \f 匹配一个换页符。等价于`\x0c和\cL`                         |
+| \n 匹配一个换行符。等价于`\x0a和\cJ`                         |
+| \r 匹配一个回车符。等价于`\x0d和\cM`                         |
+| \s 匹配任何空白字符，包括空格、制表符、换页符等。等价于`[\f\n\r\t\v]` |
+| \S 匹配任何非空白字符。等价于`[^\f\n\r\t\v]`                 |
+| \t 匹配一个制表符。等价于`\x09和\cI`                         |
+| \v 匹配一个垂直制表符。等价于`\x0b和\c`                      |
+| \w 匹配包括下划线的任何单词字符。等价于`[A-Za-z0-9]`         |
+| \W 匹配任何非单词字符。等价于`[^A-Za-z0-9]`                  |
+
+#### 4.5、动态切面
+
+DynamicMethodMatcherPointcut是一个抽象类，它将isRuntime（）标识为final且返回true，这样其子类就一定是一个动态切点。该抽象类默认匹配所有的类和方法，因此需要通过扩展该类编写符合要求的动态切点。
+
+代码清单：GreetingDynamicPointcut
+
+```java
+package com.pzh.advisor;
+
+import org.springframework.aop.ClassFilter;
+import org.springframework.aop.support.DynamicMethodMatcherPointcut;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+public class GreetingDynamicPointcut extends DynamicMethodMatcherPointcut {
+
+    private static List<String> specialClientList = new ArrayList<>();
+
+    static {
+        specialClientList.add("John");
+        specialClientList.add("Tom");
+    }
+
+    /**
+     * 对类进行静态切点的检查
+     */
+    @Override
+    public ClassFilter getClassFilter() {
+        return new ClassFilter() {
+            @Override
+            public boolean matches(Class<?> clazz) {
+                System.out.println("调用getClassFilter（）对" + clazz.getName() + "做静态检查.");
+                return Waiter.class.isAssignableFrom(clazz);
+            }
+        };
+    }
+
+    /**
+     * 对方法进行静态切点检查
+     */
+    @Override
+    public boolean matches(Method method, Class<?> targetClass) {
+        System.out.println("调用matches（method，targetClass）"
+                + targetClass.getName()
+                + "."
+                + method.getName()
+                + "做静态检查."
+        );
+        return "greetTo".equals(method.getName());
+    }
+
+    /**
+     * 对方法进行动态切点检查
+     */
+    @Override
+    public boolean matches(Method method, Class<?> targetClass, Object... args) {
+        System.out.println("调用matches（method，targetClass，args）"
+                + targetClass.getName()
+                + "."
+                + method.getName()
+                + "做动态检查."
+                );
+        String clientName = (String) args[0];
+        return specialClientList.contains(clientName);
+    }
+}
+```
+
+GreetingDynamicPointcut类既有用于静态切点检查的方法，又有用于动态切点检查的方法。由于动态切点检查会对性能造成很大的影响，所以应当尽量避免在运行时每次都对目标类各个方法进行动态检查。Spring采用这样的机制：在创建代理时，对目标类的每个连接点使用静态切点检查，如过仅通过静态切点检查就可以知道连接点不匹配，则在运行时就不再进行动态检查；如果静态切点检查是匹配的，则在运行时菜进行动态切点检查。
+
+在动态切点类中进行静态切点检查的方法可以避免不必要的动态切点的检查操作，从而极大的提高运行效率。
+
+在GreetingDynamicPointcut类中，通过boolean matches(Method method, Class<?> targetClass, Object... args)定义了动态切点检查的方法，只对目标方法为greetTo（clientName）且clientName为特殊客户的方法启用增强，通过specialClientList模拟特殊的客户名单。
+
+代码清单：动态切面的配置
+
+```xml
+<bean id="waiterTarget" class="com.pzh.advisor.Waiter"/>
+<bean id="dynamicAdvisor"
+      class="org.springframework.aop.support.DefaultPointcutAdvisor">
+    <property name="pointcut">
+        <bean class="com.pzh.advisor.GreetingDynamicPointcut"/>
+    </property>
+    <property name="advice">
+        <bean class="com.pzh.advisor.GreetingBeforeAdvice"/>
+    </property>
+</bean>
+
+<bean id="waiter2" class="org.springframework.aop.framework.ProxyFactoryBean"
+      p:interceptorNames="dynamicAdvisor"
+      p:target-ref="waiterTarget"
+      p:proxyTargetClass="true"/>
+
+```
+
+动态切面的配置和静态切面的配置没有什么区别。使用DefaultPointcutAdvisor定义切面，使用内部bean的方式注入动态切点GreetingDynamicPointcut，增强依旧使用前面定义的GreetingBeforeAdvice。此外，DefaultPointcutAdvisor还有一个order属性，用于定义切面的织入顺序。
+
+代码清单：动态切面的测试代码
+
+```java
+@Test
+public void testDynamic() {
+    String configPath = "com/pzh/advisor/beans.xml";
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext(configPath);
+    Waiter waiter = applicationContext.getBean("waiter2", Waiter.class);
+    waiter.greetTo("Peter");
+    waiter.serveTo("Peter");
+    System.out.println("---------------");
+    waiter.greetTo("Tom");
+    waiter.serveTo("Tom");
+}
+```
+
+运行代码，输出以下信息：
+
+```java
+//以下8行输出信息反映了在织入切面前Spring对目标类中所有方法进行静态检查
+调用getClassFilter（）对com.pzh.advisor.Waiter做静态检查.
+调用matches（method，targetClass）com.pzh.advisor.Waiter.serveTo做静态检查.
+调用getClassFilter（）对com.pzh.advisor.Waiter做静态检查.
+调用matches（method，targetClass）com.pzh.advisor.Waiter.greetTo做静态检查.
+调用getClassFilter（）对com.pzh.advisor.Waiter做静态检查.
+调用matches（method，targetClass）com.pzh.advisor.Waiter.toString做静态检查.
+调用getClassFilter（）对com.pzh.advisor.Waiter做静态检查.
+调用matches（method，targetClass）com.pzh.advisor.Waiter.clone做静态检查.
+
+//对应waiter.greetTo("Peter"):第一次调用serveTo（）方法时，执行静态、动态切点检查
+调用getClassFilter（）对com.pzh.advisor.Waiter做静态检查.
+调用matches（method，targetClass）com.pzh.advisor.Waiter.greetTo做静态检查.
+调用matches（method，targetClass，args）com.pzh.advisor.Waiter.greetTo做动态检查.
+waiter greet to Peter...
+
+//对应waiter.serveTo("Peter"):第一次调用serveTo（）方法时，执行静态切点检查
+调用getClassFilter（）对com.pzh.advisor.Waiter做静态检查.
+调用matches（method，targetClass）com.pzh.advisor.Waiter.serveTo做静态检查.
+waiter serve to Peter...
+
+---------------
+//对应waiter.greetTo("Tom"):第二次调用greetTo（）方法时，只进行动态切点检查
+调用matches（method，targetClass，args）com.pzh.advisor.Waiter.greetTo做动态检查.
+com.pzh.advisor.Waiter.greetTo
+How are you! Mr.Tom.
+waiter greet to Tom...
+
+//对应waiter.serveTo("Tom"):第二次调用serveTo（）方法时，不再执行静态切点检查
+waiter serve to Tom...
+```
+
+通过以上的输出信息，对照DynamicMethodMatcherPointcut切点类，可以很容易发现，Spring会在创建代理织入切面时，对目标类中的所有方法进行静态切点检查；在生成织入切面的代理对象后，第一次调用代理类的每一个方法都会进行一次静态切点检查，如果本次检查就能从候选者列表中将该方法派出，则以后对该方法的调用就不再执行静态切点检查；对于那些在静态切点检查时匹配的方法，在后续调用该方法时，将执行动态切点检查。
+
+如果将GreetingDynamicPointcut类的getClassFilter（）和matcher（Method method，Class clazz）方法注释掉，重新测试代码，将得到以下的输出信息。
+
+```sql
+调用matches（method，targetClass，args）com.pzh.advisor.Waiter.greetTo做动态检查.
+waiter greet to Peter...
+调用matches（method，targetClass，args）com.pzh.advisor.Waiter.serveTo做动态检查.
+waiter serve to Peter...
+---------------
+调用matches（method，targetClass，args）com.pzh.advisor.Waiter.greetTo做动态检查.
+com.pzh.advisor.Waiter.greetTo
+How are you! Mr.Tom.
+waiter greet to Tom...
+调用matches（method，targetClass，args）com.pzh.advisor.Waiter.serveTo做动态检查.
+com.pzh.advisor.Waiter.serveTo
+How are you! Mr.Tom.
+waiter serve to Tom...
+```
+
+可以发现，每次调用代理对象的任何一个方法，都会执行动态切点检查，这将导致很大的性能问题。所以，在定义动态切点时，切勿忘记同时覆盖getClassFilter（）和matcher（Method method，Class clazz）方法，通过静态切点检查排除大部分方法。
+
+#### 4.6、流程切面
+
+Spring的流程切面有DefaultPointcutAdvisor和ControlFlowPointcut实现。流程切点代表有某个方法直接或间接发起调用的其他方法。来看下面的实例，假设通过一个WaiterDelegate类代理Waiter所有方法。
+
+代码清单：WaiterDelegate
+
+```java
+package com.pzh.advisor;
+public class WaiterDelegate {
+    private Waiter waiter;
+    public void setWaiter(Waiter waiter) {
+        this.waiter = waiter;
+    }
+    public void service(String clientName) {
+        waiter.greetTo(clientName);
+        waiter.serveTo(clientName);
+    }
+}
+```
+
+如果希望所有有WaiterDelegate#service（）方法发起调用的其他方法都织入GreetingBeforeAdvice增强，就必须使用流程切面来完成目标。
+
+代码清单：配置控制流程切面
+
+```xml
+<bean id="waiterTarget" class="com.pzh.advisor.Waiter"/>
+<bean id="greetingBeforeAdvice" class="com.pzh.advisor.GreetingBeforeAdvice"/>
+<bean id="controlFlowPointcut" class="org.springframework.aop.support.ControlFlowPointcut">
+    <constructor-arg type="java.lang.Class" value="com.pzh.advisor.WaiterDelegate"/>
+    <constructor-arg type="java.lang.String" value="service"/>
+</bean>
+
+<bean id="controlFlowAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor"
+      p:pointcut-ref="controlFlowPointcut"
+      p:advice-ref="greetingBeforeAdvice"/>
+
+<bean id="waiter3" class="org.springframework.aop.framework.ProxyFactoryBean"
+      p:interceptorNames="controlFlowAdvisor"
+      p:target-ref="waiterTarget"
+      p:proxyTargetClass="true"/>
+```
+
+ControlFlowPointcut有两个构造函数，分别是ControlFlowPointcut（Class clazz）和ControlFlowPointcut（Class clazz，String methodName）。第一个构造函数指定一个类作为流程切点；而第二个构造函数指定一个类和某一个方法作为流程切点。
+
+在这里，指定com.smart.advisor.WaiterDelegate#service（）方法作为切点，表示所有通过该方法直接或间接发起的调用匹配切点。
+
+测试代码：
+
+```java
+@Test
+public void testControlFlowAdvisor() {
+    String configPath = "com/pzh/advisor/beans.xml";
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext(configPath);
+    WaiterDelegate waiterDelegate = new WaiterDelegate();
+    Waiter waiter = applicationContext.getBean("waiter3", Waiter.class);
+    waiter.serveTo("Peter");
+    waiter.greetTo("Peter");
+
+    waiterDelegate.setWaiter(waiter);
+    waiterDelegate.service("Peter");
+}
+```
+
+运行上面的代码，输出下面的信息：
+
+```java
+waiter serve to Peter...	//对应 waiter.serveTo("Peter");
+waiter greet to Peter...	//对应 waiter.greetTo("Peter");
+//对应waiterDelegate.service("Peter");
+com.pzh.advisor.Waiter.greetTo
+How are you! Mr.Peter.
+waiter greet to Peter...
+com.pzh.advisor.Waiter.serveTo
+How are you! Mr.Peter.
+waiter serve to Peter...
+```
+
+流程切面和动态切面从某种程度上说可以算是一类切面，因为二者都需要在运行期判断动态的环境。对于流程切面来说，代理对象在每次调用目标类方法时，都需要判断方法调用堆栈中是否有满足流程切点要求的方法。因此和动态切面一样，流程切面对性能的影响也很大。
+
+#### 4.7、复合切点切面
+
+假设我们希望由WaiterDelegate#service（）发起调用且被调用的方法是Waiter#greetTo（）时才织入增强，这切点就是复合切点，因为它由两个单独的切点共同确定。
+
+Spring提供的ComposablePointcut把两个切点组合起来，通过切点的复合运算表示。ComposablePointcut可以将多个切点以并集或交集的方式组合起来，提供了切点之间的复合运算的功能。
+
+```java
+//构造一个匹配所有类所有方法的复合切点
+public ComposablePointcut() {
+    this.classFilter = ClassFilter.TRUE;
+    this.methodMatcher = MethodMatcher.TRUE;
+}
+
+//构造一个匹配特定类所有方法的复合切点
+public ComposablePointcut(ClassFilter classFilter) {
+    Assert.notNull(classFilter, "ClassFilter must not be null");
+    this.classFilter = classFilter;
+    this.methodMatcher = MethodMatcher.TRUE;
+}
+
+//构造一个匹配所有类的特定方法的复合切点
+public ComposablePointcut(MethodMatcher methodMatcher) {
+    Assert.notNull(methodMatcher, "MethodMatcher must not be null");
+    this.classFilter = ClassFilter.TRUE;
+    this.methodMatcher = methodMatcher;
+}
+
+//构造一个匹配特定类的特定方法的复合切点
+public ComposablePointcut(ClassFilter classFilter, MethodMatcher methodMatcher) {
+    Assert.notNull(classFilter, "ClassFilter must not be null");
+    Assert.notNull(methodMatcher, "MethodMatcher must not be null");
+    this.classFilter = classFilter;
+    this.methodMatcher = methodMatcher;
+}
+
+//ComposablePointcut提供了3个交集运算的方法
+//将复合切点和一个ClassFilter对象进行交集运算，得到一个结果复合切点
+public ComposablePointcut intersection(ClassFilter other) {
+    this.classFilter = ClassFilters.intersection(this.classFilter, other);
+    return this;
+}
+
+//将复合切点和一个MethodMatcher对象进行交集运算，得到一个结果复合切点
+public ComposablePointcut intersection(MethodMatcher other) {
+    this.methodMatcher = MethodMatchers.intersection(this.methodMatcher, other);
+    return this;
+}
+
+//将复合切点和一个切点对象进行交集运算，得到一个结果复合切点
+public ComposablePointcut intersection(Pointcut other) {
+    this.classFilter = ClassFilters.intersection(this.classFilter, other.getClassFilter());
+    this.methodMatcher = MethodMatchers.intersection(this.methodMatcher, other.getMethodMatcher());
+    return this;
+}
+
+//ComposablePointcut提供了两个并集运算的方法
+//将复合切点和一个ClassFilter对象进行并集运算，得到一个结果复合切点
+public ComposablePointcut union(ClassFilter other) {
+    this.classFilter = ClassFilters.union(this.classFilter, other);
+    return this;
+}
+
+//将复合切点和一个MethodMatcher对象进行并集运算，得到一个结果复合切点
+public ComposablePointcut union(MethodMatcher other) {
+    this.methodMatcher = MethodMatchers.union(this.methodMatcher, other);
+    return this;
+}
+```
+
+ComposablePointcut没有提供直接对两个切点进行交并集运算的方法，如果需要对两个切点进行交并集运算，可以使用Spring提供的org.springframework.aop.support.Pointcuts工具类，该工具类中由两个非常好用的静态方法。
+
+```java
+//对两个切点进行并集运算，返回一个结果切点，该切点即ComposablePointcut对象的实例
+public static Pointcut union(Pointcut pc1, Pointcut pc2) {
+   return new ComposablePointcut(pc1).union(pc2);
+}
+
+//对两个切点进行交集运算，返回一个结果切点，该切点即ComposablePointcut对象的实例
+public static Pointcut intersection(Pointcut pc1, Pointcut pc2) {
+		return new ComposablePointcut(pc1).intersection(pc2);
+	}
+```
+
+下面通过ComposablePointcut创建一个流程切点和方法名切点的相交切点。
+
+代码清单：GreetingComposablePointcut
+
+```java
+package com.pzh.advisor;
+
+import org.springframework.aop.Pointcut;
+import org.springframework.aop.support.ComposablePointcut;
+import org.springframework.aop.support.ControlFlowPointcut;
+import org.springframework.aop.support.NameMatchMethodPointcut;
+
+public class GreetingComposablePointcut {
+
+    public Pointcut getIntersectionPointcut() {
+        //创建一个复合切点
+        ComposablePointcut composablePointcut = new ComposablePointcut();
+
+        //创建一个流程切点
+        Pointcut pointcut1 = new ControlFlowPointcut(WaiterDelegate.class, "service");
+
+        //创建一个方法名字切点
+        NameMatchMethodPointcut pointcut2 = new NameMatchMethodPointcut();
+        pointcut2.setMappedName("greetTo");
+		
+        //将两个交点进行交集运算
+        return composablePointcut.intersection(pointcut1).intersection((Pointcut) pointcut2);
+    }
+}
+```
+
+代码清单：配置复合切点切面：
+
+```xml
+<bean id="waiterTarget" class="com.pzh.advisor.Waiter"/>
+<bean id="sellerTarget" class="com.pzh.advisor.Seller"/>
+<bean id="greetingBeforeAdvice" class="com.pzh.advisor.GreetingBeforeAdvice"/>
+<bean id="greetingComposablePointcut" class="com.pzh.advisor.GreetingComposablePointcut"/>
+<bean id="composableAdvisor"
+      class="org.springframework.aop.support.DefaultPointcutAdvisor"
+      p:pointcut="#{greetingComposablePointcut.intersectionPointcut}"
+      p:advice-ref="greetingBeforeAdvice"/>
+
+<bean id="waiter4" class="org.springframework.aop.framework.ProxyFactoryBean"
+      p:interceptorNames="composableAdvisor"
+      p:target-ref="waiterTarget"
+      p:proxyTargetClass="true"/>
+```
+
+下面编写对应的测试代码：
+
+```java
+@Test
+public void testComposablePointcut() {
+    String configPath = "com/pzh/advisor/beans.xml";
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext(configPath);
+    Waiter waiter = applicationContext.getBean("waiter4", Waiter.class);
+    WaiterDelegate waiterDelegate = new WaiterDelegate();
+    waiterDelegate.setWaiter(waiter);
+
+    waiter.greetTo("Peter");
+    waiter.serveTo("Peter");
+
+    waiterDelegate.service("Peter");
+}
+```
+
+运行以上代码，输出以下信息：
+
+```java
+//对应waiter.greetTo("Peter");
+waiter greet to Peter...	
+//对应 waiter.serveTo("Peter");
+waiter serve to Peter...	
+//对应通过waiterDelegate.service("Peter")调用waiter.greetTo("Peter");	
+com.pzh.advisor.Waiter.greetTo	
+How are you! Mr.Peter.					
+waiter greet to Peter...	
+//通过waiterDelegate.service("Peter")调用waiter.serveTo("Peter");
+waiter serve to Peter...
+```
+
+#### 4.8、引介切面
+
+引介切面是引介增强的封装器，通过引介切面，可以很容易的为现有对象添加任何接口的实现。
+
+![1534921824018](C:\Users\Pan梓涵\AppData\Local\Temp\1534921824018.png)
+
+IntroductionAdvisor接口同时继承理了Advisor和IntroducitonInfo接口。IntroductionInfo接口描述了目标类需要实现的新接口。IntroductionAdvisor和PointcutAdvisor接口不同，它仅有一个类过滤器ClassFilter而没有methodMatcher，这是因为引介切面的切点是类级别的，而Pointcut切点是方法级别的。
+
+IntroductionAdvisor有两个实现类，分别是DefaultIntroductionAdvisor和DeclareParentsAdvisor，前者是引介切面最常用的实现类，后者用于实现使用AspectJ语言的DeclareParent注解表示的引介切面。
+
+DefaultIntroductionAdvisor拥有3个构造函数：
+
+```java
+//通过一个增强创建的引介切面，引介切面将为目标对象新增增强对象中所有接口的实现
+public DefaultIntroductionAdvisor(Advice advice) {
+   this(advice, (advice instanceof IntroductionInfo ? (IntroductionInfo) advice : null));
+}
+
+//通过一个增强和一个IntroductionInfo创建引介切面，目标对象需要实现哪些接口由introductionInfo对象的getInterfaces（）方法表示
+public DefaultIntroductionAdvisor(Advice advice, IntroductionInfo introductionInfo) {
+   Assert.notNull(advice, "Advice must not be null");
+   this.advice = advice;
+   if (introductionInfo != null) {
+      Class<?>[] introducedInterfaces = introductionInfo.getInterfaces();
+      if (introducedInterfaces.length == 0) {
+         throw new IllegalArgumentException("IntroductionAdviceSupport implements no interfaces");
+      }
+      for (Class<?> ifc : introducedInterfaces) {
+         addInterface(ifc);
+      }
+   }
+}
+
+//通过一个增强和一个指定的接口类创建引介切面，仅为目标对象新增clazz接口的实现
+public DefaultIntroductionAdvisor(DynamicIntroductionAdvice advice, Class<?> intf) {
+   Assert.notNull(advice, "Advice must not be null");
+   this.advice = advice;
+   addInterface(intf);
+}
+```
+
+配置引介切面
+
+```xml
+<bean id="introductionAdvisor" class="org.springframework.aop.support.DefaultIntroductionAdvisor">
+    <constructor-arg>
+        <bean class="com.smart.advice.ControllablePerformanceMonitor"/>
+    </constructor-arg>
+</bean>
+
+<bean id="forumServiceTarget" class="com.smart.advice.ForumService"/>
+<bean id="forumService" class="org.springframework.aop.framework.ProxyFactoryBean"
+      p:interceptorNames="introductionAdvisor"
+      p:target-ref="forumServiceTarget"
+      p:proxyTargetClass="true"/>
+```
+
+### 5、自动创建代理
+
+在前面的所有例子中，都通过ProxyFactoryBean创建织入切面的代理，每个需要被代理的Bean都需要使用一个ProxyFactoryBean进行配置，虽然可以使用父子`<bean>`进行改造，但还是很麻烦。
+
+幸运的是，Spring提供了自动代理机制，让容器自动生成代理，把开发人员从繁琐的配置工作中解放出来。在内部，Spring使用BeanPostProcessor自动完成这项工作。
+
+#### 5.1、实现类介绍
+
+1. 基于Bean配置名规则的自动代理创建器：允许为一组特定配置名的Bean自动创建代理实例的代理创建器，实现类为`BeanNameAutoProxyCreator`。
+2. 基于Advisor匹配机制的自动代理创建器：它会对容器中所有的Advisor进行扫描，自动将这些切面应用到匹配的Bean中（为目标Bean创建代理实例，实现类为`DefaultAdvisorAutoProxyCreator`）。
+3. 基于Bean中的AspectJ注解标签的自动代理创建器：为包含AspectJ注解的Bean自动创建代理实例，实现类为`AnnotationAwareAspectJAutoProxyCreator`。
+
+#### 5.2、BeanNameAutoProxyCreator
+
+代码清单，使用bean名进行自动代理：
+
+```xml
+<bean id="waiter" class="com.pzh.advisor.Waiter"/>
+<bean id="seller" class="com.pzh.advisor.Seller"/>
+<bean id="greetingBeforeAdvice" class="com.pzh.advisor.GreetingBeforeAdvice"/>
+
+<bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator"
+      p:interceptorNames="greetingBeforeAdvice"
+      p:optimize="true">
+    <property name="beanNames" value="waiter,seller"/>
+</bean>
+```
+
+#### 5.3、DefaultAdvisorAutoProxyCreator
+
+切面Advisor是切点和切面的复合体，Advisor本身已经包含了足够的信息，如横切逻辑和连接点。
+
+DefaultAdvisorAutoProxyCreator能够扫描容器中的Advisor，并将Advisor自动织入匹配的目标bean中，即为匹配的目标bean自动创建代理。
+
+代码清单：
+
+```xml
+<bean id="waiter" class="com.pzh.advisor.Waiter"/>
+<bean id="seller" class="com.pzh.advisor.Seller"/>
+<bean id="greetingBeforeAdvice" class="com.pzh.advisor.GreetingBeforeAdvice"/>
+<bean id="regexpAdvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor"
+      p:patterns=".*greet.*"
+      p:advice-ref="greetingBeforeAdvice"/>
+<bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+```
+
+#### 5.4、AOP无法被增强疑难问题解析
+
+大家在使用SpringAOP时，或多或少会碰到一些方法无法被增强的问题，有时同一个类里面的方法，有的可以被增强，有的无法被增强。要分析其原因，首先要从SpringAOP的实现机制入手。从上面的学习可以知道，AOP底层实现有两种方法：一种是基于JDK动态代理；另一种是基于CGLib动态代理。
+
+在JDK动态代理中通过接口来实现方法的拦截，所以必须要确保要拦截的目标方法在接口中有定义，否则将无法实现拦截。
+
+在CGLib动态代理中通过动态生成代理子类来实现方法拦截，所以必须确保要拦截的目标方法可被子类访问，也就是目标方法必须被定义为非final，则非私有方法。
